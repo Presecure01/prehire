@@ -1,0 +1,16 @@
+{
+  "name": "prehire-app",
+  "version": "1.0.0",
+  "description": "Resume upload and profile creation system",
+  "scripts": {
+    "install-all": "cd backend && npm install && cd ../frontend && npm install && cd ../ai-service && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd ai-service && npm run dev\" \"cd frontend && npm start\"",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "keywords": ["resume", "recruitment", "ai", "parsing", "react", "node"],
+  "author": "PreHire Team",
+  "license": "MIT"
+}

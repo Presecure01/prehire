@@ -1,0 +1,3 @@
+- [x] Start MongoDB (MongoDB not installed or not in PATH)
+- [x] Run npm run install-all to install dependencies
+- [x] Run npm run dev to start all services (Ports 5001 and 3001 in use, frontend starting)
