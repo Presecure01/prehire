@@ -31,6 +31,9 @@ import OAuthCallback from './pages/OAuthCallback';
 import { AuthProvider, useAuth } from './utils/AuthContext';
 import CandidateEditProfile from './pages/CandidateEditProfile';
 import CandidateUploadResume from './pages/CandidateUploadResume';
+import AddPanelMember from './pages/AddPanelMember';
+import PanelMemberConfirmation from './pages/PanelMemberConfirmation';
+import AddProfiles from './pages/AddProfiles';
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
@@ -139,6 +142,30 @@ function App() {
                   <RecruiterDashboardNewUI />
                 </ProtectedRoute>
               } 
+            />
+            <Route 
+              path="/recruiter/add-panel-member"
+              element={
+                <ProtectedRoute role="recruiter">
+                  <AddPanelMember />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/recruiter/panel-member-confirmation"
+              element={
+                <ProtectedRoute role="recruiter">
+                  <PanelMemberConfirmation />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/recruiter/add-profiles"
+              element={
+                <ProtectedRoute role="recruiter">
+                  <AddProfiles />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/recruiter/add-balance" 

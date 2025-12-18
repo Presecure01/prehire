@@ -67,7 +67,20 @@ const AddNewCard = () => {
         ...styles.header,
         padding: isMobile ? '12px 16px' : '16px 32px'
       }}>
-        <div style={styles.brand}>PreHire</div>
+        <div
+          style={styles.brand}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/recruiter')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/recruiter');
+            }
+          }}
+        >
+          PreHire
+        </div>
         
         {/* Desktop Navigation */}
         <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}>
@@ -213,7 +226,7 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     height: 64
   },
-  brand: { fontSize: 22, fontWeight: 700, color: '#7C3AED' },
+  brand: { fontSize: 22, fontWeight: 700, color: '#7C3AED', cursor: 'pointer', userSelect: 'none' },
   nav: { gap: 24, alignItems: 'center' },
   mobileMenuBtn: {
     background: 'none',

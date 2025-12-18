@@ -34,6 +34,13 @@ const userSchema = new mongoose.Schema({
   companyName: String,
   companyLogo: String,
   contactInfo: String,
+  panelMembers: [{
+    name: String,
+    email: String,
+    designation: String,
+    role: String
+  }],
+  shortlistedProfiles: [String],
   // Wallet balance (shared by both roles)
   walletBalance: { type: Number, default: 0 },
   // Payment cards

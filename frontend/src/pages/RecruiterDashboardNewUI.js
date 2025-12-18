@@ -10,6 +10,10 @@ const RecruiterDashboardNewUI = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [walletBalance, setWalletBalance] = useState(user?.walletBalance || 0);
+  const [panelMembers, setPanelMembers] = useState(user?.panelMembers || []);
+  const [shortlistedProfiles, setShortlistedProfiles] = useState([]);
+  const [shortlistLoading, setShortlistLoading] = useState(false);
+  const [shortlistError, setShortlistError] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -26,28 +30,46 @@ const RecruiterDashboardNewUI = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch latest wallet balance from backend
-    const fetchWalletBalance = async () => {
+    // Fetch latest profile (wallet + panel members) from backend
+    const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get('http://localhost:5001/api/recruiter/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (response.data.walletBalance !== undefined) {
-          setWalletBalance(response.data.walletBalance);
-          // Update user context
-          updateUser({ walletBalance: response.data.walletBalance });
+
+        const profile = response.data;
+        if (profile.walletBalance !== undefined) {
+          setWalletBalance(profile.walletBalance);
+        }
+        if (Array.isArray(profile.panelMembers)) {
+          setPanelMembers(profile.panelMembers);
+        }
+        if (Array.isArray(profile.shortlistedProfiles)) {
+          updateUser({
+            walletBalance: profile.walletBalance,
+            panelMembers: profile.panelMembers,
+            shortlistedProfiles: profile.shortlistedProfiles
+          });
+        } else {
+          updateUser({
+            walletBalance: profile.walletBalance,
+            panelMembers: profile.panelMembers
+          });
         }
       } catch (error) {
-        console.error('Failed to fetch wallet balance:', error);
+        console.error('Failed to fetch profile:', error);
         // Use user context as fallback
         if (user?.walletBalance !== undefined) {
           setWalletBalance(user.walletBalance);
         }
+        if (Array.isArray(user?.panelMembers)) {
+          setPanelMembers(user.panelMembers);
+        }
       }
     };
 
-    fetchWalletBalance();
+    fetchProfile();
   }, [user, updateUser]);
 
   // Update wallet balance when user context changes (e.g., after balance update)
@@ -56,6 +78,40 @@ const RecruiterDashboardNewUI = () => {
       setWalletBalance(user.walletBalance);
     }
   }, [user?.walletBalance]);
+
+  // Update panel members when user context changes
+  useEffect(() => {
+    if (Array.isArray(user?.panelMembers)) {
+      setPanelMembers(user.panelMembers);
+    }
+  }, [user?.panelMembers]);
+
+  // Fetch shortlisted profiles for dashboard widget
+  useEffect(() => {
+    const fetchShortlistedProfiles = async () => {
+      try {
+        setShortlistLoading(true);
+        const token = localStorage.getItem('token');
+        const { data } = await axios.get('http://localhost:5001/api/recruiter/shortlisted-profiles', {
+          params: { onlyShortlisted: true },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setShortlistedProfiles(data.profiles || []);
+        if (data.shortlistIds) {
+          updateUser({ shortlistedProfiles: data.shortlistIds });
+        }
+        setShortlistError('');
+      } catch (error) {
+        console.error('Failed to fetch shortlisted profiles:', error);
+        setShortlistError('Unable to load shortlisted profiles.');
+        setShortlistedProfiles([]);
+      } finally {
+        setShortlistLoading(false);
+      }
+    };
+
+    fetchShortlistedProfiles();
+  }, []);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -79,21 +135,6 @@ const RecruiterDashboardNewUI = () => {
     navigate('/employer/login');
   };
 
-  const panelMembers = [
-    { name: 'Himanshu S.', role: 'Sr. UX Designer' },
-    { name: 'Sahil M.', role: 'Manager' },
-    { name: 'Sanya Shah', role: 'Sr. Software Developer' }
-  ];
-
-  const shortlisted = [
-    { name: 'Ananya Mehra', role: 'UX Designer' },
-    { name: 'Rohit Singh', role: 'Web Developer' },
-    { name: 'Sanya Shah', role: 'Software Developer' },
-    { name: 'Rohit Singh', role: 'Web Developer' },
-    { name: 'Sanya Shah', role: 'Software Developer' },
-    { name: 'Rohit Singh', role: 'Web Developer' }
-  ];
-
   const CalendarCell = ({ day, active }) => (
     <div style={{
       width: 36,
@@ -113,7 +154,20 @@ const RecruiterDashboardNewUI = () => {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <div style={styles.brand}>PreHire</div>
+        <div
+          style={styles.brand}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/recruiter')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/recruiter');
+            }
+          }}
+        >
+          PreHire
+        </div>
         
         {/* Desktop Navigation */}
         <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}> 
@@ -189,8 +243,8 @@ const RecruiterDashboardNewUI = () => {
 
       <main style={{
         ...styles.main,
-        padding: isMobile ? 16 : 24,
-        marginTop: isMobile ? 70 : 80
+        padding: isMobile ? 10 : 16,
+        marginTop: isMobile ? 60 : 70
       }}> 
         <div style={{
           ...styles.gridTop,
@@ -263,16 +317,43 @@ const RecruiterDashboardNewUI = () => {
           <div style={styles.shortlistedCard}>
             <div style={styles.cardHeaderRow}>
               <div style={styles.cardTitle}>Shortlisted Profiles</div>
-              <a href="#" style={styles.linkSm}>See all</a>
+              <a
+                href="#"
+                style={styles.linkSm}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/recruiter/add-profiles');
+                }}
+              >
+                See all
+              </a>
             </div>
             <div>
-              {shortlisted.map((p, i) => (
-                <div key={i} style={styles.shortRow}>
+              {shortlistLoading && (
+                <div style={styles.emptyState}>Loading shortlisted profiles...</div>
+              )}
+              {shortlistError && (
+                <div style={styles.errorText}>{shortlistError}</div>
+              )}
+              {!shortlistLoading && shortlistedProfiles.length === 0 && !shortlistError && (
+                <div style={styles.emptyState}>No profile shortlisted</div>
+              )}
+              {!shortlistLoading && shortlistedProfiles.map((p, i) => (
+                <div key={p.id || i} style={styles.shortRow}>
                   <div style={{ display: 'flex', gap: 16 }}>
                     <span>{i + 1}. {p.name}</span>
-                    <span style={{ color: '#6B7280' }}>{p.role}</span>
+                    <span style={{ color: '#6B7280' }}>{p.title || p.role}</span>
                   </div>
-                  <a href="#" style={styles.linkXS}>View profile</a>
+                  <a
+                    href="#"
+                    style={styles.linkXS}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/recruiter/add-profiles');
+                    }}
+                  >
+                    View profile
+                  </a>
                 </div>
               ))}
             </div>
@@ -281,7 +362,12 @@ const RecruiterDashboardNewUI = () => {
           <div style={styles.panelCard}>
             <div style={styles.cardHeaderRow}>
               <div style={styles.cardTitle}>Panel Members</div>
-              <button style={styles.addMoreBtn}>Add More +</button>
+              <button
+                style={styles.addMoreBtn}
+                onClick={() => navigate('/recruiter/add-panel-member')}
+              >
+                Add More +
+              </button>
             </div>
             <div>
               {panelMembers.map((m, i) => (
@@ -334,9 +420,11 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   },
   brand: { 
-    fontSize: 22, 
+    fontSize: 19, 
     fontWeight: 700, 
-    color: '#7C3AED'
+    color: '#7C3AED',
+    cursor: 'pointer',
+    userSelect: 'none'
   },
   nav: { 
     gap: 24, 
@@ -459,8 +547,13 @@ const styles = {
     transition: 'background 0.2s'
   },
   main: { 
-    padding: 24,
-    marginTop: 80 // Account for fixed header
+    padding: 16,
+    marginTop: 70, // Account for fixed header
+    maxWidth: 1400,
+    width: '100%',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    boxSizing: 'border-box'
   },
   gridTop: { 
     display: 'grid', 
@@ -474,7 +567,7 @@ const styles = {
   },
   welcomeCard: { 
     borderRadius: 12, 
-    padding: 24, 
+    padding: 20, 
     background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
     display: 'flex', 
     flexDirection: 'column', 
@@ -518,7 +611,7 @@ const styles = {
     background: '#fff', 
     border: '1px solid #E5E7EB', 
     borderRadius: 12, 
-    padding: 20
+    padding: 16
   },
   cardHeaderRow: { 
     display: 'flex', 
@@ -555,10 +648,10 @@ const styles = {
     background: '#fff', 
     border: '1px solid #E5E7EB', 
     borderRadius: 12, 
-    padding: 20, 
+    padding: 16, 
     display: 'flex', 
     flexDirection: 'column', 
-    gap: 20
+    gap: 16
   },
   summaryItem: { 
     display: 'flex', 
@@ -580,7 +673,7 @@ const styles = {
     background: '#fff', 
     border: '1px solid #E5E7EB', 
     borderRadius: 12, 
-    padding: 20
+    padding: 16
   },
   shortRow: { 
     display: 'flex', 
@@ -588,6 +681,16 @@ const styles = {
     justifyContent: 'space-between', 
     padding: '10px 0', 
     borderBottom: '1px solid #F3F4F6'
+  },
+  emptyState: {
+    color: '#6B7280',
+    fontSize: 14,
+    padding: '8px 0'
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 14,
+    padding: '8px 0'
   },
   linkXS: { 
     color: '#2563EB', 
@@ -598,7 +701,7 @@ const styles = {
     background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
     border: '1px solid #E5E7EB', 
     borderRadius: 12, 
-    padding: 20
+    padding: 16
   },
   panelRow: { 
     display: 'grid', 
@@ -621,7 +724,7 @@ const styles = {
     background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
     border: '1px solid #E5E7EB', 
     borderRadius: 12, 
-    padding: 20
+    padding: 16
   },
   accountRow: { 
     display: 'flex', 
@@ -641,5 +744,3 @@ const styles = {
 };
 
 export default RecruiterDashboardNewUI;
-
-

@@ -4,6 +4,113 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Dummy candidate profiles for shortlist/search experiences
+const dummyProfiles = [
+  {
+    id: 'rahul-gupta',
+    name: 'Rahul Gupta',
+    title: 'UX Designer',
+    location: 'Jaipur',
+    experienceYears: 2,
+    experienceLabel: '2 years',
+    phone: '+91 7829451044',
+    education: 'B.Tech',
+    availabilityDays: 15,
+    avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60',
+    resumeUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    topCandidate: true,
+    keywords: ['product design', 'ux', 'figma']
+  },
+  {
+    id: 'ananya-mehra',
+    name: 'Ananya Mehra',
+    title: 'Web Designer',
+    location: 'Pune',
+    experienceYears: 3,
+    experienceLabel: '3 years',
+    phone: '+91 6354783291',
+    education: 'B.Tech',
+    availabilityDays: 10,
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60',
+    resumeUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    topCandidate: true,
+    keywords: ['ui', 'illustration', 'responsive']
+  },
+  {
+    id: 'sanya-shah',
+    name: 'Sanya Shah',
+    title: 'Frontend Engineer',
+    location: 'Bengaluru',
+    experienceYears: 4,
+    experienceLabel: '4 years',
+    phone: '+91 9876501234',
+    education: 'M.Tech',
+    availabilityDays: 30,
+    avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=60',
+    resumeUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    topCandidate: false,
+    keywords: ['react', 'javascript', 'frontend']
+  },
+  {
+    id: 'rohit-singh',
+    name: 'Rohit Singh',
+    title: 'Web Developer',
+    location: 'Hyderabad',
+    experienceYears: 2.5,
+    experienceLabel: '2-3 years',
+    phone: '+91 7682341098',
+    education: 'B.Sc Computer Science',
+    availabilityDays: 20,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60',
+    resumeUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    topCandidate: false,
+    keywords: ['javascript', 'node', 'css']
+  }
+];
+
+const experienceMatches = (years, filter) => {
+  if (!filter || filter === 'all') return true;
+  if (years === undefined || years === null) return false;
+  switch (filter) {
+    case '0-2':
+      return years <= 2;
+    case '2-4':
+      return years >= 2 && years <= 4;
+    case '3':
+      return Math.round(years) === 3;
+    case '4-6':
+      return years >= 4 && years <= 6;
+    case '6+':
+      return years >= 6;
+    default:
+      return true;
+  }
+};
+
+const computeRelevance = (profile, searchTerm = '') => {
+  const normalized = searchTerm.trim().toLowerCase();
+  if (!normalized) return profile.topCandidate ? 5 : 0;
+  const haystack = [
+    profile.name,
+    profile.title,
+    profile.location,
+    profile.education,
+    ...(profile.keywords || [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  
+  const terms = normalized.split(/\s+/);
+  let score = profile.topCandidate ? 5 : 0;
+  terms.forEach(term => {
+    if (haystack.includes(term)) {
+      score += 12;
+    }
+  });
+  return score;
+};
+
 // Get recruiter profile
 router.get('/profile', auth, async (req, res) => {
   try {
@@ -12,6 +119,214 @@ router.get('/profile', auth, async (req, res) => {
       return res.status(404).json({ message: 'Recruiter not found' });
     }
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get shortlisted profiles with filters
+router.get('/shortlisted-profiles', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'recruiter') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const {
+      search = '',
+      experience = 'all',
+      location = 'all',
+      education = 'all',
+      availability = 'all',
+      sortBy = 'relevance',
+      onlyShortlisted = 'false'
+    } = req.query;
+
+    const user = await User.findById(req.user.userId).select('shortlistedProfiles role');
+    if (!user || user.role !== 'recruiter') {
+      return res.status(404).json({ message: 'Recruiter not found' });
+    }
+
+    const shortlistIds = user.shortlistedProfiles || [];
+    const keyword = search.trim().toLowerCase();
+    const availabilityNum = availability === 'all' ? null : parseInt(availability, 10);
+    const shortlistOnly = String(onlyShortlisted).toLowerCase() === 'true';
+
+    let profiles = dummyProfiles.map(profile => ({
+      ...profile,
+      isShortlisted: shortlistIds.includes(profile.id)
+    }));
+
+    if (shortlistOnly) {
+      profiles = profiles.filter(p => p.isShortlisted);
+    }
+
+    if (keyword) {
+      profiles = profiles.filter(profile => {
+        const haystack = [
+          profile.name,
+          profile.title,
+          profile.location,
+          profile.education,
+          ...(profile.keywords || [])
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(keyword);
+      });
+    }
+
+    if (experience && experience !== 'all') {
+      profiles = profiles.filter(profile => experienceMatches(profile.experienceYears, experience));
+    }
+
+    if (location && location !== 'all') {
+      profiles = profiles.filter(profile => profile.location?.toLowerCase() === location.toLowerCase());
+    }
+
+    if (education && education !== 'all') {
+      profiles = profiles.filter(profile => profile.education?.toLowerCase().includes(education.toLowerCase()));
+    }
+
+    if (availabilityNum && !Number.isNaN(availabilityNum)) {
+      profiles = profiles.filter(profile => profile.availabilityDays && profile.availabilityDays <= availabilityNum);
+    }
+
+    profiles = profiles.map(profile => ({
+      ...profile,
+      relevanceScore: computeRelevance(profile, keyword)
+    }));
+
+    switch (sortBy) {
+      case 'experience':
+        profiles.sort((a, b) => (b.experienceYears || 0) - (a.experienceYears || 0));
+        break;
+      case 'location':
+        profiles.sort((a, b) => (a.location || '').localeCompare(b.location || ''));
+        break;
+      case 'name':
+        profiles.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      default:
+        profiles.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+    }
+
+    res.json({
+      profiles,
+      shortlistIds,
+      total: profiles.length,
+      appliedFilters: { search, experience, location, education, availability, sortBy, onlyShortlisted: shortlistOnly }
+    });
+  } catch (error) {
+    console.error('Shortlisted profiles fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch shortlisted profiles', error: error.message });
+  }
+});
+
+// Toggle or update shortlist
+router.post('/shortlisted-profiles/:profileId', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'recruiter') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { profileId } = req.params;
+    const { action = 'toggle' } = req.body;
+
+    const profile = dummyProfiles.find(p => p.id === profileId);
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Recruiter not found' });
+    }
+
+    let shortlist = user.shortlistedProfiles || [];
+    const alreadyShortlisted = shortlist.includes(profileId);
+
+    if (action === 'remove' || (action === 'toggle' && alreadyShortlisted)) {
+      shortlist = shortlist.filter(id => id !== profileId);
+    } else if (!alreadyShortlisted) {
+      shortlist.push(profileId);
+    }
+
+    user.shortlistedProfiles = shortlist;
+    await user.save();
+
+    res.json({
+      shortlist,
+      profile: { ...profile, isShortlisted: shortlist.includes(profileId) }
+    });
+  } catch (error) {
+    console.error('Shortlist update error:', error);
+    res.status(500).json({ message: 'Failed to update shortlist', error: error.message });
+  }
+});
+
+// Add a panel member
+router.post('/panel-members', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'recruiter') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { name, email, designation, role } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !designation || !role) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    // Check if user exists
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Recruiter not found' });
+    }
+
+    // Check for duplicate email in existing panel members
+    if (user.panelMembers && user.panelMembers.some(m => m.email === email)) {
+      return res.status(400).json({ message: 'Panel member with this email already exists' });
+    }
+
+    // Add panel member
+    const updated = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $push: { panelMembers: { name: name.trim(), email: email.trim().toLowerCase(), designation: designation.trim(), role: role.trim() } } },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Failed to update panel members' });
+    }
+
+    return res.json(updated.panelMembers || []);
+  } catch (error) {
+    console.error('Error adding panel member:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get panel members
+router.get('/panel-members', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'recruiter') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const user = await User.findById(req.user.userId).select('panelMembers');
+    if (!user) {
+      return res.status(404).json({ message: 'Recruiter not found' });
+    }
+
+    res.json(user.panelMembers || []);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

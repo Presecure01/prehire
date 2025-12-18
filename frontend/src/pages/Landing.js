@@ -9,10 +9,10 @@ const Landing = () => {
   const handleSocialLogin = (provider) => {
     const role = activeTab; // 'candidate' or 'employer'
     const baseUrl = 'http://localhost:5001/api/auth';
-    
+
     // Store the intended role in localStorage for after OAuth callback
     localStorage.setItem('pendingRole', role);
-    
+
     switch (provider) {
       case 'google':
         window.location.href = `${baseUrl}/google?role=${role}`;
@@ -41,104 +41,128 @@ const Landing = () => {
     <div style={styles.container}>
       <Navbar />
 
-      <main style={{
-        ...styles.main,
-        padding: isMobile ? '2rem 1rem' : '4rem 3rem 2rem',
-        marginTop: isMobile ? 70 : 80
-      }}>
-        <div style={{
-          ...styles.hero,
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? '2rem' : '0'
-        }}>
-          <div style={styles.heroContent}>
-            <h1 style={styles.title}>
-              Discover one-in-a-million talent, <span style={styles.highlight}>effortlessly</span>
-            </h1>
-            <p style={styles.subtitle}>
-              AI-powered filtering, instant access, and smarter hiring designed for busy recruiters and best jobs for candidates
-            </p>
-          </div>
-          
-          <div style={styles.notification}>
-            <div style={styles.avatar}>👤</div>
-            <div style={styles.notificationText}>
-              John we found 14 candidates found for your SDE-I role
+      <main
+        style={{
+          ...styles.main,
+          padding: isMobile ? '1.5rem 1rem 2rem' : '2.5rem 2rem 3rem',
+          marginTop: isMobile ? 64 : 72
+        }}
+      >
+        {/* layout wrapper so content is centered and limited in width */}
+        <div style={styles.layout}>
+          {/* HERO SECTION */}
+          <div
+            style={{
+              ...styles.hero,
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              gap: isMobile ? '1.75rem' : '2.5rem'
+            }}
+          >
+            <div style={styles.heroContent}>
+              <h1 style={styles.title}>
+                Discover one-in-a-million talent,{' '}
+                <span style={styles.highlight}>effortlessly</span>
+              </h1>
+              <p style={styles.subtitle}>
+                AI-powered filtering, instant access, and smarter hiring designed for busy
+                recruiters and the best jobs for candidates.
+              </p>
             </div>
-          </div>
-        </div>
 
-        <div style={styles.bottomSection}>
-          <div style={styles.tabs}>
-            <button 
-              style={{...styles.tab, ...(activeTab === 'candidate' ? styles.activeTab : {})}}
-              onClick={() => setActiveTab('candidate')}
-            >
-              For Candidate
-            </button>
-            <button 
-              style={{...styles.tab, ...(activeTab === 'employer' ? styles.activeTab : {})}}
-              onClick={() => setActiveTab('employer')}
-            >
-              For Employer
-            </button>
-          </div>
-          
-          <p style={styles.question}>
-            {activeTab === 'candidate' ? 'How can I help you find job today ?' : 'How can I help you hire today ?'}
-          </p>
-          
-          {activeTab === 'candidate' ? (
-            <div style={styles.actions}>
-              <Link to="/candidate-signup" style={styles.joinButton}>Join Now</Link>
-              <Link to="/candidate/login" style={styles.loginButtonBottom}>Login</Link>
+            <div style={styles.notification}>
+              <div style={styles.avatar}>👤</div>
+              <div style={styles.notificationText}>
+                John, we found 14 candidates for your SDE-I role.
+              </div>
             </div>
-          ) : (
-            <>
-              <div style={styles.searchContainer}>
-                <input
-                  type="text"
-                  placeholder="I want to hire a Java Developer with 5+ years of experience in Bangalore"
-                  style={styles.searchInput}
-                />
-                <button style={styles.searchButton}><span aria-hidden>🔍</span></button>
-              </div>
-              
-              <div style={styles.actions}>
-                <Link to="/employer-signup" style={styles.joinButton}>Sign Up</Link>
-                <Link to="/employer/login" style={styles.loginButtonBottom}>Login</Link>
-              </div>
-            </>
-          )}
-          
-          <div style={styles.divider}>
-            <div style={styles.dividerLine}></div>
-            <span style={styles.dividerText}>OR</span>
-            <div style={styles.dividerLine}></div>
           </div>
-          
-          <div style={styles.socialButtons}>
-            <button 
-              style={{...styles.socialButton, ...styles.googleButton}}
-              onClick={() => handleSocialLogin('google')}
-              title="Continue with Google"
-            >
-              <i className="bi bi-google"></i>
-            </button>
-            <button 
-              style={{...styles.socialButton, ...styles.facebookButton}}
-              onClick={() => handleSocialLogin('facebook')}
-              title="Continue with Facebook"
-            >
-              <i className="bi bi-facebook"></i>
-            </button>
-            <button 
-              style={{...styles.socialButton, ...styles.linkedinButton}}
-              onClick={() => handleSocialLogin('linkedin')}
-              title="Continue with LinkedIn"
-            >
-              <i className="bi bi-linkedin"></i>
-            </button>
+
+          {/* BOTTOM CARD SECTION */}
+          <div style={styles.bottomSection}>
+            <div style={styles.tabs}>
+              <button
+                style={{ ...styles.tab, ...(activeTab === 'candidate' ? styles.activeTab : {}) }}
+                onClick={() => setActiveTab('candidate')}
+              >
+                For Candidate
+              </button>
+              <button
+                style={{ ...styles.tab, ...(activeTab === 'employer' ? styles.activeTab : {}) }}
+                onClick={() => setActiveTab('employer')}
+              >
+                For Employer
+              </button>
+            </div>
+
+            <p style={styles.question}>
+              {activeTab === 'candidate'
+                ? 'How can I help you find a job today?'
+                : 'How can I help you hire today?'}
+            </p>
+
+            {activeTab === 'candidate' ? (
+              <div style={styles.actions}>
+                <Link to="/candidate-signup" style={styles.joinButton}>
+                  Join Now
+                </Link>
+                <Link to="/candidate/login" style={styles.loginButtonBottom}>
+                  Login
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div style={styles.searchContainer}>
+                  <input
+                    type="text"
+                    placeholder="I want to hire a Java Developer with 5+ years of experience in Bangalore"
+                    style={styles.searchInput}
+                  />
+                  <button style={styles.searchButton}>
+                    <span aria-hidden>🔍</span>
+                  </button>
+                </div>
+
+                <div style={styles.actions}>
+                  <Link to="/employer-signup" style={styles.joinButton}>
+                    Sign Up
+                  </Link>
+                  <Link to="/employer/login" style={styles.loginButtonBottom}>
+                    Login
+                  </Link>
+                </div>
+              </>
+            )}
+
+            <div style={styles.divider}>
+              <div style={styles.dividerLine}></div>
+              <span style={styles.dividerText}>OR</span>
+              <div style={styles.dividerLine}></div>
+            </div>
+
+            <div style={styles.socialButtons}>
+              <button
+                style={{ ...styles.socialButton, ...styles.googleButton }}
+                onClick={() => handleSocialLogin('google')}
+                title="Continue with Google"
+              >
+                <i className="bi bi-google"></i>
+              </button>
+              <button
+                style={{ ...styles.socialButton, ...styles.facebookButton }}
+                onClick={() => handleSocialLogin('facebook')}
+                title="Continue with Facebook"
+              >
+                <i className="bi bi-facebook"></i>
+              </button>
+              <button
+                style={{ ...styles.socialButton, ...styles.linkedinButton }}
+                onClick={() => handleSocialLogin('linkedin')}
+                title="Continue with LinkedIn"
+              >
+                <i className="bi bi-linkedin"></i>
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -153,48 +177,53 @@ const styles = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
   main: {
-    padding: '4rem 3rem 2rem',
-    marginTop: 80
+    // overall page area below navbar
+    minHeight: 'calc(100vh - 72px)',
+    display: 'flex',
+    justifyContent: 'center'
+  },
+  layout: {
+    width: '100%',
+    maxWidth: '1200px',
+    margin: '0 auto'
   },
   hero: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    marginBottom: '6rem'
+    alignItems: 'center',
+    marginBottom: '2.5rem'
   },
   heroContent: {
     flex: 1,
-    maxWidth: '500px'
+    maxWidth: '520px'
   },
   title: {
-    fontSize: '3.5rem',
-    fontWeight: '700',
+    // responsive font size: min 2rem, ideal ~3rem, max 3.2rem
+    fontSize: 'clamp(2rem, 4vw, 3.2rem)',
+    fontWeight: 700,
     color: '#1F2937',
-    lineHeight: '1.1',
-    marginBottom: '1.5rem'
+    lineHeight: 1.2,
+    marginBottom: '1rem'
   },
   highlight: {
     color: '#60A5FA',
     fontStyle: 'italic'
   },
   subtitle: {
-    fontSize: '1.1rem',
+    fontSize: 'clamp(1rem, 1.6vw, 1.15rem)',
     color: '#6B7280',
-    lineHeight: '1.6',
-    marginBottom: '2rem'
+    lineHeight: 1.6,
+    marginBottom: '0.75rem'
   },
   notification: {
     backgroundColor: '#F9FAFB',
     border: '1px solid #E5E7EB',
     borderRadius: '12px',
-    padding: '1.5rem',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
-    maxWidth: '350px',
-    marginTop: '2rem'
+    gap: '0.9rem',
+    maxWidth: '340px'
   },
   avatar: {
     width: '40px',
@@ -204,82 +233,84 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.2rem'
+    fontSize: '1.2rem',
+    color: '#fff'
   },
   notificationText: {
     fontSize: '0.95rem',
     color: '#374151',
-    lineHeight: '1.4'
+    lineHeight: 1.4
   },
   bottomSection: {
     textAlign: 'center',
-    maxWidth: '600px',
-    margin: '0 auto',
+    maxWidth: '640px',
+    margin: '0 auto 1.5rem',
     backgroundColor: '#F8FAFC',
-    padding: '3rem 2rem',
-    borderRadius: '20px'
+    padding: '2.25rem 2rem',
+    borderRadius: '20px',
+    boxShadow: '0 6px 20px rgba(15, 23, 42, 0.06)'
   },
   tabs: {
     display: 'inline-flex',
     backgroundColor: '#F3F4F6',
     borderRadius: '30px',
     padding: '4px',
-    marginBottom: '2rem',
+    marginBottom: '1.5rem',
     border: '1px solid #E5E7EB'
   },
   tab: {
-    padding: '12px 24px',
+    padding: '10px 22px',
     border: 'none',
     backgroundColor: 'transparent',
     borderRadius: '26px',
-    fontSize: '16px',
-    fontWeight: '500',
+    fontSize: '15px',
+    fontWeight: 500,
     cursor: 'pointer',
     color: '#6B7280',
     transition: 'all 0.2s ease',
-    minWidth: '140px'
+    minWidth: '130px'
   },
   activeTab: {
     backgroundColor: '#60A5FA',
-    color: 'white',
+    color: '#fff',
     boxShadow: '0 2px 4px rgba(96, 165, 250, 0.3)'
   },
   question: {
-    fontSize: '1.1rem',
+    fontSize: '1.05rem',
     color: '#374151',
-    marginBottom: '2rem',
-    fontWeight: '500'
+    marginBottom: '1.75rem',
+    fontWeight: 500
   },
   actions: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '2rem'
+    gap: '0.9rem',
+    marginBottom: '1.75rem'
   },
   joinButton: {
     textDecoration: 'none',
     background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-    color: 'white',
-    padding: '1rem 2rem',
+    color: '#fff',
+    padding: '0.9rem 2rem',
     borderRadius: '25px',
-    fontSize: '1rem',
-    fontWeight: '600'
+    fontSize: '0.98rem',
+    fontWeight: 600
   },
   loginButtonBottom: {
     textDecoration: 'none',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     color: '#374151',
-    padding: '1rem 2rem',
+    padding: '0.9rem 2rem',
     borderRadius: '25px',
-    fontSize: '1rem',
-    fontWeight: '500',
+    fontSize: '0.98rem',
+    fontWeight: 500,
     border: '1px solid #D1D5DB'
   },
   divider: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '2rem 0',
+    margin: '1.75rem 0',
     width: '100%'
   },
   dividerLine: {
@@ -290,77 +321,59 @@ const styles = {
   dividerText: {
     padding: '0 1rem',
     color: '#9CA3AF',
-    fontSize: '0.9rem',
-    fontWeight: '500'
+    fontSize: '0.85rem',
+    fontWeight: 500
   },
   socialButtons: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '1rem'
+    gap: '0.9rem'
   },
   socialButton: {
-    width: '50px',
-    height: '50px',
+    width: '46px',
+    height: '46px',
     borderRadius: '50%',
     border: '1px solid #D1D5DB',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    ':hover': {
-      transform: 'scale(1.05)'
-    }
+    transition: 'all 0.2s ease'
   },
   googleButton: {
-    color: '#DB4437',
-    ':hover': {
-      backgroundColor: '#DB4437',
-      color: 'white',
-      borderColor: '#DB4437'
-    }
+    color: '#DB4437'
   },
   facebookButton: {
-    color: '#4267B2',
-    ':hover': {
-      backgroundColor: '#4267B2',
-      color: 'white',
-      borderColor: '#4267B2'
-    }
+    color: '#4267B2'
   },
   linkedinButton: {
-    color: '#0077B5',
-    ':hover': {
-      backgroundColor: '#0077B5',
-      color: 'white',
-      borderColor: '#0077B5'
-    }
+    color: '#0077B5'
   },
   searchContainer: {
     display: 'flex',
-    marginBottom: '2rem',
+    marginBottom: '1.75rem',
     border: '1px solid #D1D5DB',
     borderRadius: '25px',
     overflow: 'hidden',
-    backgroundColor: 'white'
+    backgroundColor: '#fff'
   },
   searchInput: {
     flex: 1,
-    padding: '1rem 1.5rem',
+    padding: '0.9rem 1.4rem',
     border: 'none',
-    fontSize: '1rem',
+    fontSize: '0.98rem',
     outline: 'none',
     color: '#374151'
   },
   searchButton: {
-    padding: '1rem 1.5rem',
+    padding: '0.9rem 1.4rem',
     border: 'none',
     backgroundColor: '#3B82F6',
-    color: 'white',
+    color: '#fff',
     cursor: 'pointer',
-    fontSize: '1.2rem'
+    fontSize: '1.1rem'
   }
 };
 

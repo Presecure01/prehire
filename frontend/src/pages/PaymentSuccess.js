@@ -35,7 +35,20 @@ const PaymentSuccess = () => {
         ...styles.header,
         padding: isMobile ? '12px 16px' : '16px 32px'
       }}>
-        <div style={styles.brand}>PreHire</div>
+        <div
+          style={styles.brand}
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/recruiter')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/recruiter');
+            }
+          }}
+        >
+          PreHire
+        </div>
         
         {/* Desktop Navigation */}
         <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}>
@@ -164,7 +177,9 @@ const styles = {
   brand: {
     fontSize: 22,
     fontWeight: 700,
-    color: '#7C3AED'
+    color: '#7C3AED',
+    cursor: 'pointer',
+    userSelect: 'none'
   },
   nav: {
     gap: 24,
