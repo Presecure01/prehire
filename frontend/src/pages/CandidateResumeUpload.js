@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { FiMenu, FiX } from 'react-icons/fi';
-import { mergeSignupData, setResumeFile } from '../utils/candidateSignupStore';
+import { mergeSignupData, setResumeFile, getSignupData } from '../utils/candidateSignupStore';
 
 const CandidateResumeUpload = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +22,15 @@ const CandidateResumeUpload = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadError, setUploadError] = useState('');
   const navigate = useNavigate();
+
+  // Check if resume was already uploaded in step 1 and skip this step
+  useEffect(() => {
+    const signupData = getSignupData();
+    if (signupData.resumeUploadedInStep1) {
+      // Resume was already uploaded in step 1, skip this step
+      navigate('/candidate/complete', { replace: true });
+    }
+  }, [navigate]);
 
   const onDrop = (acceptedFiles) => {
     const file = acceptedFiles[0];

@@ -1,19 +1,19 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import axios from 'axios';
-import { FiBell, FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { API_ENDPOINTS, getApiUrl } from '../utils/apiClient';
+import NotificationBell from '../components/NotificationBell';
 
 const CandidateDashboardNew = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  // notification popup hidden by default; toggled by bell button
-  const [showNotification, setShowNotification] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
-  const notificationRef = useRef(null);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -72,20 +72,7 @@ const CandidateDashboardNew = () => {
     };
   }, [profileMenuOpen]);
 
-  // Close notification popup when clicking outside
-  useEffect(() => {
-    const handleClickOutsideNotification = (event) => {
-      if (showNotification && notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotification(false);
-      }
-    };
-    if (showNotification) {
-      document.addEventListener('mousedown', handleClickOutsideNotification);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutsideNotification);
-    };
-  }, [showNotification]);
+
 
   const handleLogout = () => {
     logout();
@@ -95,13 +82,13 @@ const CandidateDashboardNew = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/candidate/profile', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get(API_ENDPOINTS.CANDIDATE.PROFILE, {
+        headers: { Authorization: `Bearer ${token} ` }
       });
       console.log('Fetched profile data:', response.data);
       const profileData = response.data;
       setProfile(profileData);
-      
+
       // Update user context with latest walletBalance from backend
       if (profileData.walletBalance !== undefined) {
         updateUser({ walletBalance: profileData.walletBalance });
@@ -164,9 +151,9 @@ const CandidateDashboardNew = () => {
         padding: isMobile ? '12px 16px' : '16px 32px'
       }}>
         <div style={styles.brand}>PreHire</div>
-        
+
         {/* Desktop Navigation */}
-        <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}>
+        <nav style={{ ...styles.nav, display: isMobile ? 'none' : 'flex' }}>
           <a style={styles.navLink} href="#">About Us</a>
           <a style={styles.navLink} href="#">Clients</a>
           <a style={styles.navLink} href="#">Pricing</a>
@@ -175,8 +162,8 @@ const CandidateDashboardNew = () => {
         </nav>
 
         {/* Mobile Menu Button */}
-        <button 
-          style={{...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none'}}
+        <button
+          style={{ ...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none' }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -197,40 +184,13 @@ const CandidateDashboardNew = () => {
           ...styles.rightHeader,
           display: isMobile ? 'none' : 'flex'
         }}>
-          <div style={{ position: 'relative' }} ref={notificationRef}>
-            <button
-              onClick={() => setShowNotification(prev => !prev)}
-              style={styles.bellBtn}
-              aria-label="Toggle notifications"
-            >
-              <FiBell style={styles.icon} size={20} color="#374151" />
-              <div style={styles.notificationDot}></div>
-            </button>
-
-            {showNotification && (
-              <div style={styles.notificationPopup} role="dialog" aria-label="Notifications">
-                <div style={styles.notificationPopupHeader}>
-                  <div style={{ fontWeight: 600 }}>Notifications</div>
-                  <button
-                    onClick={() => setShowNotification(false)}
-                    style={styles.closeBtn}
-                    aria-label="Close notifications"
-                  >
-                    <FiX size={16} />
-                  </button>
-                </div>
-                <div style={styles.notificationPopupBody}>
-                  <div style={{ fontSize: 14, color: '#111827' }}>
-                    You've been shortlisted for UX Designer Role at IMB.
-                  </div>
-                </div>
-              </div>
-            )}
+          <div style={{ position: 'relative', marginRight: '12px' }}>
+            <NotificationBell />
           </div>
 
           <FiSearch style={styles.icon} size={20} color="#374151" />
           <div style={{ position: 'relative' }} ref={profileMenuRef}>
-            <div 
+            <div
               style={styles.avatar}
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
               role="button"
@@ -243,9 +203,9 @@ const CandidateDashboardNew = () => {
               }}
             >
               {profile?.photo && profile.photo.trim() ? (
-                <img 
-                  src={profile.photo.startsWith('http') ? profile.photo : `http://localhost:5001${profile.photo}`} 
-                  alt="avatar" 
+                <img
+                  src={profile.photo.startsWith('http') ? profile.photo : getApiUrl(profile.photo)}
+                  alt="avatar"
                   style={styles.avatarImg}
                   onError={(e) => {
                     e.target.style.display = 'none';
@@ -259,7 +219,7 @@ const CandidateDashboardNew = () => {
               }}>
                 {displayName.charAt(0).toUpperCase()}
               </div>
-            </div>
+            </div >
             {profileMenuOpen && (
               <div style={styles.profileDropdown}>
                 <div style={styles.profileDropdownHeader}>
@@ -275,20 +235,20 @@ const CandidateDashboardNew = () => {
                   Edit user profile
                 </button>
 
-                 <button 
-                   style={styles.profileDropdownItem}
-                   onClick={handleLogout}
-                   onMouseEnter={(e) => e.target.style.background = '#F9FAFB'}
-                   onMouseLeave={(e) => e.target.style.background = 'none'}
-                 >
-                   <FiLogOut style={{ marginRight: 8 }} />
-                   Logout
-                 </button>
+                <button
+                  style={styles.profileDropdownItem}
+                  onClick={handleLogout}
+                  onMouseEnter={(e) => e.target.style.background = '#F9FAFB'}
+                  onMouseLeave={(e) => e.target.style.background = 'none'}
+                >
+                  <FiLogOut style={{ marginRight: 8 }} />
+                  Logout
+                </button>
               </div>
             )}
-          </div>
-        </div>
-      </header>
+          </div >
+        </div >
+      </header >
 
       {/* notification is now a popup from the bell button (not a sticky banner) */}
 
@@ -300,10 +260,10 @@ const CandidateDashboardNew = () => {
       }}>
         <div style={{
           ...styles.gridTop,
-          gridTemplateColumns: isMobile 
-            ? '1fr' 
-            : window.innerWidth <= 1024 
-              ? '1fr 1fr' 
+          gridTemplateColumns: isMobile
+            ? '1fr'
+            : window.innerWidth <= 1024
+              ? '1fr 1fr'
               : '1.2fr 1fr 0.7fr',
           gridTemplateRows: !isMobile && window.innerWidth <= 1024 ? 'auto auto' : 'auto',
           gap: isMobile ? 12 : 16
@@ -336,8 +296,8 @@ const CandidateDashboardNew = () => {
             </div>
             <div style={styles.calendarDaysRow}>S M T W T F S</div>
             <div style={styles.calendarGrid}>
-              {[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map((d) => (
-                <CalendarCell key={d} day={d} active={[2,6,11,13,17,20,24,27].includes(d)} />
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map((d) => (
+                <CalendarCell key={d} day={d} active={[2, 6, 11, 13, 17, 20, 24, 27].includes(d)} />
               ))}
             </div>
           </div>
@@ -425,8 +385,8 @@ const CandidateDashboardNew = () => {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 };
 

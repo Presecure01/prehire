@@ -34,6 +34,9 @@ import CandidateUploadResume from './pages/CandidateUploadResume';
 import AddPanelMember from './pages/AddPanelMember';
 import PanelMemberConfirmation from './pages/PanelMemberConfirmation';
 import AddProfiles from './pages/AddProfiles';
+import ATSScoreUpload from './pages/ATSScoreUpload';
+import ATSScoreResults from './pages/ATSScoreResults';
+import CandidateATSScore from './pages/CandidateATSScore';
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
@@ -220,6 +223,30 @@ function App() {
               element={
                 <ProtectedRoute role="candidate">
                   <CandidateUploadResume />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/ats-score-upload"
+              element={
+                <ProtectedRoute role="candidate">
+                  <ATSScoreUpload />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/ats-score-results"
+              element={
+                <ProtectedRoute role="candidate">
+                  <ATSScoreResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/candidate/ats-score"
+              element={
+                <ProtectedRoute role="candidate">
+                  <CandidateATSScore />
                 </ProtectedRoute>
               }
             />

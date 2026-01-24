@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import { getApiUrl } from '../utils/apiClient';
 
 const Landing = () => {
   const [activeTab, setActiveTab] = useState('candidate');
@@ -8,7 +9,7 @@ const Landing = () => {
 
   const handleSocialLogin = (provider) => {
     const role = activeTab; // 'candidate' or 'employer'
-    const baseUrl = 'http://localhost:5001/api/auth';
+    const baseUrl = getApiUrl('/api/auth');
 
     // Store the intended role in localStorage for after OAuth callback
     localStorage.setItem('pendingRole', role);

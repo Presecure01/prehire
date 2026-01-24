@@ -716,28 +716,52 @@ router.get('/facets', auth, async (req, res) => {
 router.post('/unlock-profile/:candidateId', auth, async (req, res) => {
   try {
     if (req.user.role !== 'recruiter') {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
     const { candidateId } = req.params;
     
-    // Find the candidate
-    const candidate = await User.findById(candidateId)
-      .select('-password')
-      .populate('resumeUrl');
+    // Find the candidate and recruiter
+    const [candidate, recruiter] = await Promise.all([
+      User.findById(candidateId).select('-password'),
+      User.findById(req.user.userId).select('name companyName email')
+    ]);
     
     if (!candidate || candidate.role !== 'candidate') {
-      return res.status(404).json({ message: 'Candidate not found' });
+      return res.status(404).json({ success: false, message: 'Candidate not found' });
     }
 
-    // In a real app, you would:
-    // 1. Check if recruiter has credits/subscription
-    // 2. Deduct credits or check subscription status
-    // 3. Log the unlock event
-    // 4. Send notification to candidate
+    // TODO: When payment gateway is integrated:
+    // 1. Check if recruiter has sufficient wallet balance (₹500)
+    // 2. Create transaction record
+    // 3. Deduct from wallet balance
+    // 4. Process payment
+
+    // Create notification for candidate
+    const Notification = require('../models/Notification');
+    const emailService = require('../services/emailService');
+
+    await Notification.create({
+      userId: candidateId,
+      type: 'profile_unlocked',
+      title: 'Your Profile Was Unlocked',
+      message: `${recruiter.name} from ${recruiter.companyName || 'a company'} unlocked your profile`,
+      metadata: {
+        candidateId: candidateId,
+        link: '/candidate/profile'
+      }
+    });
+
+    // Send email to candidate
+    await emailService.sendProfileUnlockedEmail(
+      candidate.email,
+      candidate.name,
+      recruiter.name,
+      recruiter.companyName
+    );
     
-    // For now, just return full profile
     res.json({
+      success: true,
       message: 'Profile unlocked successfully',
       candidate: {
         ...candidate.toObject(),
@@ -749,7 +773,7 @@ router.post('/unlock-profile/:candidateId', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unlock failed', error: error.message });
+    res.status(500).json({ success: false, message: 'Unlock failed', error: error.message });
   }
 });
 

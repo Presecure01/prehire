@@ -87,12 +87,14 @@ router.post('/register', [
       experienceYears
     } = req.body;
     
-    const existingUser = await User.findOne({ email });
+    // Normalize email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const userData = { name, email, password, role };
+    const userData = { name, email: normalizedEmail, password, role };
     if (phone !== undefined) userData.phone = phone;
     if (location !== undefined) userData.location = location;
     if (currentRole !== undefined) userData.currentRole = currentRole;
@@ -123,6 +125,12 @@ router.post('/register', [
       { expiresIn: '7d' }
     );
 
+    // Send welcome email (non-blocking)
+    const emailService = require('../services/emailService');
+    emailService.sendWelcomeEmail(user).catch(err => {
+      console.error('Failed to send welcome email:', err);
+    });
+
     res.status(201).json({
       token,
       user: serializeUser(user)
@@ -145,9 +153,35 @@ router.post('/login', [
 
     const { email, password } = req.body;
     
-    const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // Use case-insensitive email lookup (handles legacy mixed-case records)
+    const normalizedEmail = email.trim().toLowerCase();
+    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const ciEmailQuery = { email: { $regex: new RegExp(`^${escapeRegex(email.trim())}$`, 'i') } };
+    let user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      user = await User.findOne(ciEmailQuery);
+    }
+    
+    if (!user) {
+      console.log('Login attempt: User not found for email:', email);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Check if user has a password (OAuth users might not have passwords)
+    if (!user.password) {
+      console.log('Login attempt: User has no password (OAuth user):', email);
+      return res.status(401).json({ 
+        message: 'This account was created with social login. Please use social login to sign in.',
+        useSocialLogin: true
+      });
+    }
+
+    // Compare password
+    const isPasswordValid = await user.comparePassword(password);
+    
+    if (!isPasswordValid) {
+      console.log('Login attempt: Invalid password for email:', email);
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const token = jwt.sign(
@@ -161,6 +195,7 @@ router.post('/login', [
       user: serializeUser(user)
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

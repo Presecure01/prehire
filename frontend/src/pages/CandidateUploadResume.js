@@ -135,17 +135,83 @@ const CandidateUploadResume = () => {
       const token = localStorage.getItem('token');
       const fd = new FormData();
       fd.append('resume', selectedFile);
+      
+      // Upload resume
       const res = await axios.post('http://localhost:5001/api/upload/resume', fd, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.data?.resumeUrl) {
-        setResumeInfo({ url: res.data.resumeUrl, updatedAt: new Date().toISOString() });
-        updateUser({ resumeUrl: res.data.resumeUrl });
+      
+      if (res.data?.resumeUrl || res.data?.fileUrl) {
+        const fileUrl = res.data.resumeUrl || res.data.fileUrl;
+        setResumeInfo({ url: fileUrl, updatedAt: new Date().toISOString() });
+        updateUser({ resumeUrl: fileUrl });
+        
+        // Parse the resume using AI service
+        try {
+          const user = JSON.parse(localStorage.getItem('user'));
+          const parseResponse = await axios.post('http://localhost:3001/api/parse-resume', {
+            fileUrl: fileUrl,
+            userId: user?.id
+          }, {
+            headers: { 
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          // Update profile with parsed data
+          const parsedData = parseResponse.data.data || parseResponse.data;
+          if (parsedData) {
+            try {
+              await axios.put('http://localhost:5001/api/candidate/resume-data', {
+                name: parsedData.name,
+                email: parsedData.email,
+                phone: parsedData.phone,
+                skills: parsedData.skills,
+                education: parsedData.education,
+                experienceYears: parsedData.experienceYears,
+                linkedin: parsedData.linkedin,
+                github: parsedData.github,
+                languages: parsedData.languages,
+                summary: parsedData.summary
+              }, {
+                headers: { 
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              
+              // Update user context
+              updateUser({
+                name: parsedData.name || user?.name,
+                email: parsedData.email || user?.email,
+                phone: parsedData.phone || user?.phone,
+                skills: parsedData.skills || user?.skills,
+                education: parsedData.education || user?.education,
+                experienceYears: parsedData.experienceYears || user?.experienceYears,
+                linkedIn: parsedData.linkedin || user?.linkedIn,
+                github: parsedData.github || user?.github,
+                languages: parsedData.languages || user?.languages
+              });
+            } catch (updateError) {
+              console.error('Failed to update profile with parsed data:', updateError);
+            }
+          }
+        } catch (parseError) {
+          console.error('Parse error:', parseError);
+          // Still show success for upload even if parsing fails
+        }
       } else {
         await loadResumeInfo();
       }
+      
       setSelectedFile(null);
-      alert('Resume uploaded successfully');
+      
+      // Show success message with option to view profile
+      const viewProfile = window.confirm(
+        'Resume uploaded and parsed successfully! Your profile has been updated with the extracted information.\n\nWould you like to view your updated profile?'
+      );
+      if (viewProfile) {
+        navigate('/candidate/edit-profile', { state: { refresh: true } });
+      }
     } catch (err) {
       console.error('Upload failed', err);
       alert('Upload failed. See console.');
@@ -348,7 +414,8 @@ const CandidateUploadResume = () => {
           </button>
         </div>
 
-        <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <div style={{ marginTop: 12, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <a href="/candidate/edit-profile" style={styles.backLink}>View Updated Profile</a>
           <a href="/candidate" style={styles.backLink}>Back to Dashboard</a>
         </div>
       </main>

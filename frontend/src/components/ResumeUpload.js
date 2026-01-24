@@ -29,20 +29,46 @@ const ResumeUpload = ({ onUploadSuccess }) => {
       
       // Parse the resume using AI service
       try {
+        const user = JSON.parse(localStorage.getItem('user'));
         const parseResponse = await axios.post('http://localhost:3001/api/parse-resume', {
           fileUrl: response.data.fileUrl,
-          userId: JSON.parse(localStorage.getItem('user'))?.id
+          userId: user?.id
         }, {
           headers: { 
             'Authorization': `Bearer ${token}`
           }
         });
         
+        // Update profile with parsed data
+        const parsedData = parseResponse.data.data || parseResponse.data;
+        if (parsedData) {
+          try {
+            await axios.put('http://localhost:5001/api/candidate/resume-data', {
+              name: parsedData.name,
+              email: parsedData.email,
+              phone: parsedData.phone,
+              skills: parsedData.skills,
+              education: parsedData.education,
+              experienceYears: parsedData.experienceYears,
+              linkedin: parsedData.linkedin,
+              github: parsedData.github,
+              languages: parsedData.languages,
+              summary: parsedData.summary
+            }, {
+              headers: { 
+                'Authorization': `Bearer ${token}`
+              }
+            });
+          } catch (updateError) {
+            console.error('Failed to update profile with parsed data:', updateError);
+          }
+        }
+        
         setUploadStatus('Resume processed successfully!');
         if (onUploadSuccess) {
           onUploadSuccess({
             ...response.data,
-            parsedData: parseResponse.data
+            parsedData: parsedData
           });
         }
       } catch (parseError) {

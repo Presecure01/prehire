@@ -3,6 +3,7 @@ import { FiBell, FiSearch, FiMenu, FiX } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../utils/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../utils/apiClient';
 
 const CandidatePaymentSuccess = () => {
   const { user, updateUser } = useAuth();
@@ -30,7 +31,7 @@ const CandidatePaymentSuccess = () => {
     const fetchWalletBalance = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5001/api/candidate/profile', {
+        const response = await axios.get(API_ENDPOINTS.CANDIDATE.PROFILE, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data.walletBalance !== undefined) {
@@ -74,9 +75,9 @@ const CandidatePaymentSuccess = () => {
         padding: isMobile ? '12px 16px' : '16px 32px'
       }}>
         <div style={styles.brand}>PreHire</div>
-        
+
         {/* Desktop Navigation */}
-        <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}>
+        <nav style={{ ...styles.nav, display: isMobile ? 'none' : 'flex' }}>
           <a style={styles.navLink} href="#">About Us</a>
           <a style={styles.navLink} href="#">Clients</a>
           <a style={styles.navLink} href="#">Pricing</a>
@@ -85,8 +86,8 @@ const CandidatePaymentSuccess = () => {
         </nav>
 
         {/* Mobile Menu Button */}
-        <button 
-          style={{...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none'}}
+        <button
+          style={{ ...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none' }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -131,7 +132,7 @@ const CandidatePaymentSuccess = () => {
           <h1 style={styles.title}>
             Payment Successful ✓
           </h1>
-          
+
           <p style={styles.subtitle}>
             Your wallet has been successfully topped up. You can now use your balance to unlock premium features and apply for jobs.
           </p>
@@ -144,7 +145,7 @@ const CandidatePaymentSuccess = () => {
               <div style={styles.label}>Amount Added</div>
               <div style={styles.value}>₹{(amountAdded || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
-            
+
             <div style={styles.summaryRow}>
               <div style={styles.iconContainer}>
                 <span style={styles.icon}>💰</span>
@@ -152,7 +153,7 @@ const CandidatePaymentSuccess = () => {
               <div style={styles.label}>New Balance</div>
               <div style={styles.value}>₹{(walletBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
-            
+
             <div style={styles.summaryRow}>
               <div style={styles.iconContainer}>
                 <span style={styles.icon}>✅</span>

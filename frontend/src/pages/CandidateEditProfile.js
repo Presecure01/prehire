@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FiBell, FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 
 const CandidateEditProfile = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -23,12 +24,15 @@ const CandidateEditProfile = () => {
     email: '',
     phone: '',
     linkedIn: '',
+    github: '',
+    languages: '',
     location: '',
     currentRole: '',
     experience: '',
     skills: '',
     education: '',
-    experienceYears: ''
+    experienceYears: '',
+    summary: ''
   });
 
   useEffect(() => {
@@ -41,35 +45,98 @@ const CandidateEditProfile = () => {
   }, []);
 
   useEffect(() => {
-    const load = async () => {
+    const loadProfile = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        
         const res = await axios.get('http://localhost:5001/api/candidate/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const p = res.data || {};
+        const currentUser = JSON.parse(localStorage.getItem('user')) || user;
+        
         setForm({
           firstName: p.firstName || p.name?.split(' ')[0] || '',
           lastName: p.lastName || p.name?.split(' ').slice(1).join(' ') || '',
-          email: p.email || user?.email || '',
+          email: p.email || currentUser?.email || '',
           phone: p.phone || '',
           linkedIn: p.linkedIn || '',
+          github: p.github || '',
+          languages: (p.languages || []).join(', '),
           location: p.location || '',
           currentRole: p.currentRole || '',
           experience: p.experience || '',
           skills: (p.skills || []).join(', '),
           education: p.education || '',
-          experienceYears: p.experienceYears ? String(p.experienceYears) : ''
+          experienceYears: p.experienceYears ? String(p.experienceYears) : '',
+          summary: p.summary || ''
         });
-        if (p.walletBalance !== undefined) updateUser({ walletBalance: p.walletBalance });
+        
+        if (p.walletBalance !== undefined && updateUser) {
+          updateUser({ walletBalance: p.walletBalance });
+        }
       } catch (err) {
         console.error('Failed to load profile', err);
+        alert('Failed to load profile. Please check your connection.');
       } finally {
         setLoading(false);
       }
     };
-    load();
-  }, [user, updateUser]);
+
+    loadProfile();
+  }, []); // Only run once on mount
+
+  // Refresh profile when navigating to this page (e.g., after resume upload)
+  useEffect(() => {
+    // Reload profile data when location state indicates refresh
+    if (location.state?.refresh) {
+      const loadProfile = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          
+          const res = await axios.get('http://localhost:5001/api/candidate/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const p = res.data || {};
+          const currentUser = JSON.parse(localStorage.getItem('user')) || user;
+          
+          setForm({
+            firstName: p.firstName || p.name?.split(' ')[0] || '',
+            lastName: p.lastName || p.name?.split(' ').slice(1).join(' ') || '',
+            email: p.email || currentUser?.email || '',
+            phone: p.phone || '',
+            linkedIn: p.linkedIn || '',
+            github: p.github || '',
+            languages: (p.languages || []).join(', '),
+            location: p.location || '',
+            currentRole: p.currentRole || '',
+            experience: p.experience || '',
+            skills: (p.skills || []).join(', '),
+            education: p.education || '',
+            experienceYears: p.experienceYears ? String(p.experienceYears) : '',
+            summary: p.summary || ''
+          });
+          
+          if (p.walletBalance !== undefined && updateUser) {
+            updateUser({ walletBalance: p.walletBalance });
+          }
+          
+          // Clear the refresh flag
+          window.history.replaceState({}, document.title, location.pathname);
+        } catch (err) {
+          console.error('Failed to refresh profile', err);
+        }
+      };
+      
+      loadProfile();
+    }
+  }, [location.state?.refresh]); // Only depend on the refresh flag
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -104,12 +171,15 @@ const CandidateEditProfile = () => {
         email: form.email,
         phone: form.phone,
         linkedIn: form.linkedIn,
+        github: form.github,
+        languages: form.languages.split(',').map(s => s.trim()).filter(Boolean),
         location: form.location,
         currentRole: form.currentRole,
         experience: form.experience,
         skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
         education: form.education,
-        experienceYears: Number(form.experienceYears || 0)
+        experienceYears: Number(form.experienceYears || 0),
+        summary: form.summary
       };
       const res = await axios.put('http://localhost:5001/api/candidate/profile', payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -227,6 +297,12 @@ const CandidateEditProfile = () => {
 
       <main style={styles.mainContainer}>
         <h2 style={styles.title}>My profile</h2>
+        
+        {location.state?.refresh && (
+          <div style={styles.infoBanner}>
+            ✓ Your profile has been updated with information from your resume
+          </div>
+        )}
 
         <section style={styles.card}>
           <div style={styles.profileRow}>
@@ -276,6 +352,16 @@ const CandidateEditProfile = () => {
             </label>
 
             <label style={styles.field}>
+              <div style={styles.label}>GitHub URL</div>
+              <input value={form.github} onChange={onChange('github')} style={styles.input} />
+            </label>
+
+            <label style={styles.field}>
+              <div style={styles.label}>Languages</div>
+              <input value={form.languages} onChange={onChange('languages')} placeholder="comma separated" style={styles.input} />
+            </label>
+
+            <label style={styles.field}>
               <div style={styles.label}>Location</div>
               <input value={form.location} onChange={onChange('location')} style={styles.input} />
             </label>
@@ -311,6 +397,17 @@ const CandidateEditProfile = () => {
               <input value={form.experienceYears} onChange={onChange('experienceYears')} style={styles.input} />
             </label>
 
+            <label style={{ ...styles.field, gridColumn: '1 / -1' }}>
+              <div style={styles.label}>Summary</div>
+              <textarea
+                value={form.summary}
+                onChange={onChange('summary')}
+                rows={3}
+                style={styles.textarea}
+                placeholder="Professional summary or objective"
+              />
+            </label>
+
             {/* small button to go to upload resume page */}
             <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', marginTop: 6 }}>
               <button type="button" onClick={() => navigate('/candidate/upload-resume')} style={styles.smallBtn}>
@@ -323,6 +420,16 @@ const CandidateEditProfile = () => {
                 {saving ? 'Saving...' : 'Submit'}
               </button>
             </div>
+
+          <div style={{ gridColumn: '1 / -1', marginTop: 8, display: 'flex', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/candidate/ats-score')}
+              style={styles.smallBtn}
+            >
+              Check ATS Score
+            </button>
+          </div>
 
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', marginTop: 12 }}>
               <a href="/candidate" style={styles.backLink}>Back to Dashboard</a>
@@ -378,7 +485,17 @@ const styles = {
   submitBtn: { width: '100%', background: '#3B82F6', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 },
   backLink: { color: '#3B82F6', textDecoration: 'none' },
   loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' },
-  closeBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+  closeBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  infoBanner: {
+    backgroundColor: '#D1FAE5',
+    color: '#065F46',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    textAlign: 'center'
+  }
 };
 
 export default CandidateEditProfile;

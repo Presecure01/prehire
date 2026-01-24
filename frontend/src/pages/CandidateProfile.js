@@ -3,6 +3,7 @@ import { FiBell, FiSearch } from 'react-icons/fi';
 import { useAuth } from '../utils/AuthContext';
 import ResumeUpload from '../components/ResumeUpload';
 import axios from 'axios';
+import { API_ENDPOINTS, getApiUrl } from '../utils/apiClient';
 
 const CandidateProfile = () => {
   const { user, logout } = useAuth();
@@ -23,10 +24,10 @@ const CandidateProfile = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/candidate/profile', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get(API_ENDPOINTS.CANDIDATE.PROFILE, {
+        headers: { Authorization: `Bearer ${token} ` }
       });
-      
+
       const userData = response.data;
       setProfile({
         name: userData.name || '',
@@ -51,10 +52,10 @@ const CandidateProfile = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:5001/api/candidate/profile', profile, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put(API_ENDPOINTS.CANDIDATE.UPDATE_PROFILE, profile, {
+        headers: { Authorization: `Bearer ${token} ` }
       });
-      
+
       alert('Profile updated successfully!');
       fetchProfile();
     } catch (error) {
@@ -85,12 +86,12 @@ const CandidateProfile = () => {
         education: parsed.education || prev.education,
         location: parsed.location || prev.location
       }));
-      
+
       if (parsed.resumeScore) {
         setResumeScore(parsed.resumeScore);
       }
     }
-    
+
     setTimeout(() => {
       fetchProfile();
     }, 1000);
@@ -114,16 +115,16 @@ const CandidateProfile = () => {
           <FiSearch style={styles.search} size={20} color="#374151" />
           <div style={styles.avatar}>
             {profile.photo ? (
-              <img src={profile.photo.startsWith('http') ? profile.photo : `http://localhost:5001${profile.photo}`} alt="Profile" style={styles.avatarImg} />
+              <img src={getApiUrl(profile.photo)} alt="Profile" style={styles.avatarImg} />
             ) : (
               <div style={styles.avatarPlaceholder}>
                 {user?.name?.charAt(0) || 'U'}
               </div>
             )}
-          </div>
+          </div >
           <button onClick={logout} style={styles.logoutBtn}>Logout</button>
-        </div>
-      </header>
+        </div >
+      </header >
 
       <div style={styles.content}>
         <div style={styles.section}>
@@ -145,7 +146,7 @@ const CandidateProfile = () => {
           <h3>Profile Information</h3>
           {profile.photo && (
             <div style={styles.photoContainer}>
-              <img src={profile.photo.startsWith('http') ? profile.photo : `http://localhost:5001${profile.photo}`} alt="Profile" style={styles.profilePhoto} />
+              <img src={getApiUrl(profile.photo)} alt="Profile" style={styles.profilePhoto} />
             </div>
           )}
           <form onSubmit={handleProfileUpdate} style={styles.form}>
@@ -194,7 +195,7 @@ const CandidateProfile = () => {
               onChange={handleInputChange}
               style={styles.input}
             />
-            
+
             <input
               type="text"
               name="experience"
@@ -203,7 +204,7 @@ const CandidateProfile = () => {
               onChange={handleInputChange}
               style={styles.input}
             />
-            
+
             <input
               type="text"
               name="currentRole"
@@ -212,7 +213,7 @@ const CandidateProfile = () => {
               onChange={handleInputChange}
               style={styles.input}
             />
-            
+
             <input
               type="text"
               name="education"
@@ -241,7 +242,7 @@ const CandidateProfile = () => {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMenu, FiX } from 'react-icons/fi';
-import { setSignupData } from '../utils/candidateSignupStore';
+import { setSignupData, mergeSignupData, getSignupData, setResumeFile } from '../utils/candidateSignupStore';
+import axios from 'axios';
 
 const CandidateSignup = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,11 +44,119 @@ const CandidateSignup = () => {
     e.preventDefault();
     // Store form data and navigate to next step
     setSignupData(formData);
+    // Skip resume upload step if resume was already uploaded in step 1
+    const signupData = getSignupData();
+    if (signupData.resumeUploadedInStep1 || resumeUploaded) {
+      navigate('/candidate/complete');
+    } else {
     navigate('/candidate/resume-upload');
+    }
   };
 
   const handleLinkedInFill = () => {
     window.location.href = 'http://localhost:5001/api/auth/linkedin';
+  };
+
+  const handleResumeUpload = async (file) => {
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type) && 
+        !file.name.toLowerCase().endsWith('.pdf') && 
+        !file.name.toLowerCase().endsWith('.doc') && 
+        !file.name.toLowerCase().endsWith('.docx')) {
+      setUploadStatus('Please upload a PDF, DOC, or DOCX file.');
+      return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadStatus('File size must be less than 5MB.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadStatus('Parsing resume...');
+
+    try {
+      const formData = new FormData();
+      formData.append('resume', file);
+
+      const response = await axios.post('http://localhost:3001/api/parse-resume-file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const parsedData = response.data.data || {};
+      
+      // Auto-fill form with parsed data
+      const nameParts = (parsedData.name || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Map experience years to experience range
+      const experienceYears = parsedData.experienceYears || 0;
+      let experienceRange = '';
+      if (experienceYears === 0) experienceRange = '0-1 years';
+      else if (experienceYears <= 3) experienceRange = '1-3 years';
+      else if (experienceYears <= 5) experienceRange = '3-5 years';
+      else if (experienceYears <= 8) experienceRange = '5-8 years';
+      else experienceRange = '8+ years';
+
+      // Map education to dropdown options
+      let educationValue = '';
+      const edu = (parsedData.education || '').toLowerCase();
+      if (edu.includes('bachelor') || edu.includes('b.') || edu.includes('b.e') || edu.includes('b.tech')) {
+        educationValue = "Bachelor's Degree";
+      } else if (edu.includes('master') || edu.includes('m.') || edu.includes('m.e') || edu.includes('m.tech') || edu.includes('mba')) {
+        educationValue = "Master's Degree";
+      } else if (edu.includes('phd') || edu.includes('doctorate')) {
+        educationValue = 'PhD';
+      } else if (edu.includes('diploma')) {
+        educationValue = 'Diploma';
+      } else if (edu.includes('certificate')) {
+        educationValue = 'Certification';
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        name: firstName && lastName ? `${firstName} ${lastName}` : (parsedData.name || prev.name),
+        phone: parsedData.phone || prev.phone,
+        email: parsedData.email || prev.email,
+        currentRole: parsedData.currentRole || prev.currentRole,
+        experience: experienceRange || prev.experience,
+        skills: Array.isArray(parsedData.skills) ? parsedData.skills.join(', ') : (parsedData.skills || prev.skills),
+        education: educationValue || prev.education,
+        linkedIn: parsedData.linkedin || prev.linkedIn
+      }));
+
+      setUploadStatus('Resume parsed successfully! Form fields have been filled.');
+      setResumeUploaded(true);
+      // Store that resume was uploaded and save the file for later upload
+      setResumeFile(file);
+      mergeSignupData({ resumeUploadedInStep1: true });
+      setTimeout(() => setUploadStatus(''), 3000);
+    } catch (error) {
+      console.error('Resume parsing error:', error);
+      setUploadStatus('Failed to parse resume. Please fill the form manually.');
+      setTimeout(() => setUploadStatus(''), 3000);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleResumeUpload(file);
+    }
+  };
+
+  const handleUploadButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -103,13 +216,31 @@ const CandidateSignup = () => {
           </p>
 
           <div style={styles.buttons}>
-            <button style={styles.uploadButton}>
-              Upload Resume 📎
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              style={{ display: 'none' }}
+              onChange={handleFileInputChange}
+              disabled={uploading}
+            />
+            <button 
+              type="button"
+              style={{...styles.uploadButton, ...(uploading ? styles.uploadButtonDisabled : {})}}
+              onClick={handleUploadButtonClick}
+              disabled={uploading}
+            >
+              {uploading ? 'Parsing...' : 'Upload Resume 📎'}
             </button>
-            <button style={styles.linkedinButton} onClick={handleLinkedInFill}>
+            <button style={styles.linkedinButton} onClick={handleLinkedInFill} disabled={uploading}>
               Fill with Linkedin
             </button>
           </div>
+          {uploadStatus && (
+            <div style={uploadStatus.includes('successfully') ? styles.successMessage : styles.errorMessage}>
+              {uploadStatus}
+            </div>
+          )}
 
           <form style={styles.form} onSubmit={handleNext}>
             <div style={styles.row}>
@@ -442,6 +573,28 @@ const styles = {
   },
   singleRow: {
     marginBottom: '1.5rem'
+  },
+  uploadButtonDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
+  },
+  successMessage: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    borderRadius: '8px',
+    backgroundColor: '#D1FAE5',
+    color: '#065F46',
+    textAlign: 'center',
+    fontSize: '0.9rem'
+  },
+  errorMessage: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    borderRadius: '8px',
+    backgroundColor: '#FEE2E2',
+    color: '#991B1B',
+    textAlign: 'center',
+    fontSize: '0.9rem'
   }
 };
 

@@ -1,223 +1,148 @@
 # PreHire - Resume Upload & Profile Creation System
 
-A comprehensive platform connecting candidates and recruiters through AI-powered resume matching.
+> **Welcome Interns!** 👋 This project is designed to help you understand a full-stack Javascript application. Please read this document carefully to get started.
 
-## Features
+A comprehensive platform connecting candidates and recruiters through AI-powered resume matching. The system allows candidates to upload resumes, parses them using AI, and helps recruiters find the best talent.
 
-### 🎯 Candidate Features
-- **Resume Upload**: Drag & drop or file picker for PDF/DOCX files
-- **AI Resume Parsing**: Automatic extraction of skills, experience, and education
-- **Resume Scoring**: Real-time quality assessment (0-100 scale)
-- **Profile Management**: Complete profile with photo, LinkedIn, contact info
-- **Secure Authentication**: JWT-based login/registration
+## 🌟 Key Features
 
-### 🏢 Recruiter Features
-- **Company Profile Setup**: Logo, company info, contact details
-- **Candidate Dashboard**: View and filter candidates
-- **Advanced Filtering**: By skills, resume score, experience
-- **Real-time Search**: Find perfect matches instantly
+### Candidate Features
+- **Smart Resume Upload**: Drag & drop PDF/DOCX files.
+- **AI Parsing**: Automatically extracts extraction of skills, experience, and contact info.
+- **ATS Board**: Real-time scoring of your resume against job descriptions.
+- **Profile**: Manage your professional identity.
 
-### 🤖 AI/NLP Features
-- **Smart Parsing**: Extract structured data from resumes
-- **Skill Detection**: Identify technical and soft skills
-- **Experience Analysis**: Parse work history and education
-- **Quality Scoring**: Comprehensive resume evaluation
+### Recruiter Features
+- **Dashboard**: Overview of candidates and job postings.
+- **Advanced Search**: Filter candidates by skills, experience, and score.
+- **Job Management**: create and manage job postings.
 
-## Tech Stack
+## 🏗️ Architecture & Tech Stack
 
-- **Frontend**: React 18, React Router, Axios, React Dropzone
-- **Backend**: Node.js, Express, MongoDB, Mongoose
-- **AI Service**: PDF parsing, DOCX processing, NLP analysis
-- **Authentication**: JWT tokens, bcrypt password hashing
-- **File Storage**: Local storage + AWS S3 support
-- **Database**: MongoDB with user profiles and resume data
+The application is built using a **MERN Stack** (modified) architecture with a separate AI microservice.
 
-## Project Structure
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, React Router, Axios | Single Page Application (SPA) for the user interface. |
+| **Backend** | Node.js, Express, MongoDB | RESTful API server handling business logic and data persistence. |
+| **Database** | MongoDB (Mongoose) | NoSQL database for flexible data storage. |
+| **AI Service** | Node.js (Python bridge support) | Dedicated service for parsing resumes and NLP tasks. |
+| **File Storage**| Local / AWS S3 | Hybrid storage system for document retention. |
 
-```
+## 📂 Project Structure
+
+```bash
 prehire-app/
-├── frontend/           # React application
-│   ├── src/
-│   │   ├── components/ # Reusable components
-│   │   ├── pages/      # Page components
-│   │   └── utils/      # Auth context, helpers
-├── backend/            # Express API server
-│   ├── src/
-│   │   ├── models/     # MongoDB schemas
-│   │   ├── routes/     # API endpoints
-│   │   ├── middleware/ # Auth middleware
-│   │   └── config/     # Database config
-├── ai-service/         # Resume parsing service
-└── uploads/           # Local file storage
+├── frontend/           # The User Interface (React)
+├── backend/            # The Main API Server (Node/Express)
+├── ai-service/         # The Microservice for Parsing
+├── uploads/            # Local directory for file storage (dev mode)
+├── scripts/            # Helper scripts for deployment/maintenance
+├── deploy.sh           # Deployment script
+└── README.md           # This file
 ```
 
-## Quick Start
+## 🚀 Quick Start Guide
+
+Follow these steps to get the application running on your local machine.
 
 ### Prerequisites
-- Node.js (v16+)
-- MongoDB (local or cloud)
-- Git
+-   **Node.js**: v16 or higher (v18 recommended)
+-   **MongoDB**: Installed locally or use a cloud URI (MongoDB Atlas).
+-   **Git**: For version control.
 
-### Installation
+### Step 1: Clone the Repository
+```bash
+git clone <repository-url>
+cd prehire-app
+```
 
-1. **Clone and setup**:
-   ```bash
-   cd prehire-app
-   ```
+### Step 2: Install Dependencies
+We have a helper script to install dependencies for all services at once, or you can do it manually.
 
-2. **Install dependencies**:
-   ```bash
-   # Backend
-   cd backend && npm install
-   
-   # Frontend  
-   cd ../frontend && npm install
-   
-   # AI Service
-   cd ../ai-service && npm install
-   ```
+**Using Helper (if available in package.json):**
+```bash
+npm run install-all
+```
 
-3. **Start MongoDB**:
-   - Local: `mongod`
-   - Or use MongoDB Atlas cloud
+**Manual Installation (Recommended for understanding):**
+```bash
+# 1. Backend
+cd backend && npm install
 
-4. **Start all services**:
-   ```bash
-   # Windows
-   start-dev.bat
-   
-   # Or manually:
-   # Terminal 1: cd backend && npm run dev
-   # Terminal 2: cd ai-service && npm run dev  
-   # Terminal 3: cd frontend && npm start
-   ```
+# 2. Frontend
+cd ../frontend && npm install
 
-5. **Access the application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - AI Service: http://localhost:3001
+# 3. AI Service
+cd ../ai-service && npm install
+```
 
-## API Endpoints
+### Step 3: Configure Environment Variables
+You need to set up `.env` files for each service.
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-
-### Candidates
-- `GET /api/candidate/profile` - Get candidate profile
-- `PUT /api/candidate/profile` - Update candidate profile
-- `PUT /api/candidate/resume-data` - Update parsed resume data
-
-### Recruiters
-- `GET /api/recruiter/profile` - Get recruiter profile
-- `PUT /api/recruiter/profile` - Update recruiter profile
-- `GET /api/recruiter/candidates` - Get filtered candidates
-
-### File Upload
-- `POST /api/upload/resume` - Upload resume file
-
-### AI Service
-- `POST /api/parse-resume` - Parse uploaded resume
-
-## Environment Variables
-
-Create `.env` file in backend directory:
-
+**Backend (`backend/.env`):**
+Copy `.env.example` to `.env` and defaults should work for local dev.
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/prehire
-JWT_SECRET=your_jwt_secret_key
-
-# Optional AWS S3
-USE_S3=false
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=prehire-resumes
+JWT_SECRET=dev_secret_key_123
 ```
 
-## Usage Guide
+**Frontend (`frontend/.env`):**
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
 
-### For Candidates:
-1. Register with role "candidate"
-2. Upload resume (PDF/DOCX, max 5MB)
-3. AI automatically parses and scores resume
-4. Complete profile with additional info
-5. View resume score and extracted data
+**AI Service (`ai-service/.env`):**
+```env
+PORT=3001
+```
 
-### For Recruiters:
-1. Register with role "recruiter"  
-2. Setup company profile
-3. Browse candidate database
-4. Filter by skills, score, experience
-5. Contact qualified candidates
+### Step 4: Start the Application
 
-## File Upload & Storage
+**Windows:**
+Double-click `start-demo.bat` to launch everything.
 
-- **Local Storage**: Files saved to `backend/uploads/`
-- **AWS S3**: Set `USE_S3=true` in environment
-- **Validation**: PDF/DOCX only, 5MB max size
-- **Security**: Files linked to user accounts
+**Manual Start (Terminal):**
+Open 3 separate terminals:
 
-## Resume Parsing Algorithm
+**Terminal 1 (Backend):**
+```bash
+cd backend
+npm run dev
+```
 
-The AI service extracts:
-- **Contact Info**: Email, phone number
-- **Skills**: Technical keywords matching
-- **Experience**: Work history parsing
-- **Education**: Academic background
-- **Scoring**: Weighted algorithm (0-100)
+**Terminal 2 (AI Service):**
+```bash
+cd ai-service
+npm run dev
+```
 
-## Security Features
+**Terminal 3 (Frontend):**
+```bash
+cd frontend
+npm start
+```
 
-- JWT token authentication
-- Password hashing with bcrypt
-- File type validation
-- Size limits on uploads
-- Protected API routes
-- Input sanitization
+Visit **http://localhost:3000** in your browser!
 
-## Development
+## 🤝 Contributing
 
-### Adding New Features:
-1. Backend: Add routes in `backend/src/routes/`
-2. Frontend: Add components in `frontend/src/`
-3. Database: Update models in `backend/src/models/`
+We welcome contributions! Please check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to submit Pull Requests, report bugs, and follow our coding standards.
 
-### Testing:
-- Use Postman for API testing
-- MongoDB Compass for database inspection
-- Browser dev tools for frontend debugging
+## 📚 Documentation
 
-## Deployment
+For more detailed information, check the specific documentation for each component:
 
-### Production Setup:
-1. Set production environment variables
-2. Build frontend: `npm run build`
-3. Use PM2 for process management
-4. Setup reverse proxy (nginx)
-5. Configure SSL certificates
+-   [Frontend Documentation](frontend/README.md)
+-   [Backend Documentation](backend/README.md)
+-   [AI Service Documentation](ai-service/README.md)
 
-## Contributing
+## 🔧 Troubleshooting
 
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Create GitHub issue
-- Check documentation
-- Review API endpoints
-- Test with provided examples
+-   **MongoDB Connection Error**: Ensure your local MongoDB service is running (`mongod`). If using Atlas, check your whitelist IP.
+-   **Modules Not Found**: Run `npm install` in the specific directory (frontend/backend/ai-service) again.
+-   **Port Conflicts**: Ensure ports 3000, 5000, and 3001 are free.
 
 ---
-
-**PreHire** - Connecting talent with opportunity through intelligent matching.
+*Happy Coding! 🚀*

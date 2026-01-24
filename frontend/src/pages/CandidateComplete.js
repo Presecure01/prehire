@@ -9,7 +9,6 @@ import { clearSignupData, getResumeFile, getSignupData } from '../utils/candidat
 const CandidateComplete = () => {
   const [formData, setFormData] = useState({
     photo: null,
-    education: '',
     password: '',
     confirmPassword: ''
   });
@@ -93,7 +92,7 @@ const CandidateComplete = () => {
         experience: previousData.experience,
         currentRole: previousData.currentRole,
         skills: skillList,
-        education: formData.education || previousData.education || '',
+        education: previousData.education || '',
         linkedIn: previousData.linkedIn || '',
         experienceYears: experienceYearsValue
       };
@@ -166,23 +165,13 @@ const CandidateComplete = () => {
 
       <main style={styles.main}>
         <div style={styles.content}>
-          <h1 style={styles.title}>Get Hired by Top Startups & Companies.</h1>
+          <h1 style={styles.title}>Complete Your Profile</h1>
           <p style={styles.subtitle}>
-            Build your profile once and let the right roles find you.<br />
-            No endless applications, no cold emails. Just real opportunities.
+            Upload your photo and create a password to finish setting up your account.
           </p>
 
-          <div style={styles.buttons}>
-            <button style={styles.uploadButton}>
-              Upload Resume 📎
-            </button>
-            <button style={styles.linkedinButton} onClick={handleLinkedInFill}>
-              Fill with Linkedin
-            </button>
-          </div>
-
           <form style={styles.form} onSubmit={handleSubmit}>
-            <div style={styles.row}>
+            <div style={styles.singleRow}>
               <div style={styles.field}>
                 <label style={styles.label}>Upload Photo*</label>
                 <div
@@ -204,22 +193,6 @@ const CandidateComplete = () => {
                     </div>
                   )}
                 </div>
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Education (highest degree)</label>
-                <select
-                  name="education"
-                  value={formData.education}
-                  onChange={handleChange}
-                  style={styles.select}
-                >
-                  <option value="">Select education</option>
-                  <option value="high-school">High School</option>
-                  <option value="bachelors">Bachelor's Degree</option>
-                  <option value="masters">Master's Degree</option>
-                  <option value="phd">PhD</option>
-                  <option value="diploma">Diploma</option>
-                </select>
               </div>
             </div>
 
@@ -342,6 +315,9 @@ const styles = {
   row: {
     display: 'flex',
     gap: '1rem',
+    marginBottom: '1.5rem'
+  },
+  singleRow: {
     marginBottom: '1.5rem'
   },
   field: {

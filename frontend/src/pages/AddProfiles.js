@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../utils/AuthContext';
 import './AddProfiles.css';
+import { API_ENDPOINTS } from '../utils/apiClient';
 
 const defaultFilters = {
   search: '',
@@ -78,7 +79,7 @@ const AddProfiles = () => {
     try {
       const token = localStorage.getItem('token');
       const params = { ...filters, ...overrides };
-      const { data } = await axios.get('http://localhost:5001/api/recruiter/shortlisted-profiles', {
+      const { data } = await axios.get(API_ENDPOINTS.RECRUITER.SHORTLISTED_PROFILES, {
         params,
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -117,7 +118,7 @@ const AddProfiles = () => {
       const token = localStorage.getItem('token');
       const action = shortlistIds.includes(profileId) ? 'remove' : 'add';
       const { data } = await axios.post(
-        `http://localhost:5001/api/recruiter/shortlisted-profiles/${profileId}`,
+        `${API_ENDPOINTS.RECRUITER.SHORTLISTED_PROFILES}/${profileId}`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -436,15 +437,15 @@ const styles = {
     zIndex: 1000,
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   },
-  brand: { 
-    fontSize: 22, 
-    fontWeight: 700, 
+  brand: {
+    fontSize: 22,
+    fontWeight: 700,
     color: '#7C3AED',
     cursor: 'pointer',
     userSelect: 'none'
   },
-  nav: { 
-    gap: 24, 
+  nav: {
+    gap: 24,
     alignItems: 'center'
   },
   mobileMenuBtn: {
@@ -477,43 +478,43 @@ const styles = {
     padding: '8px 0',
     borderBottom: '1px solid #F3F4F6'
   },
-  navLink: { 
-    color: '#6B7280', 
-    textDecoration: 'none', 
+  navLink: {
+    color: '#6B7280',
+    textDecoration: 'none',
     fontWeight: 500,
     fontSize: 14
   },
-  rightHeader: { 
-    display: 'flex', 
-    gap: 12, 
-    alignItems: 'center' 
+  rightHeader: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center'
   },
-  icon: { 
-    fontSize: 18, 
+  icon: {
+    fontSize: 18,
     cursor: 'pointer'
   },
-  avatar: { 
-    width: 36, 
-    height: 36, 
-    borderRadius: '50%', 
-    overflow: 'hidden', 
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    overflow: 'hidden',
     background: '#E5E7EB',
     cursor: 'pointer',
     transition: 'opacity 0.2s',
     border: '2px solid transparent'
   },
-  avatarImg: { 
-    width: '100%', 
-    height: '100%', 
-    objectFit: 'cover' 
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
   },
-  avatarFallback: { 
-    width: '100%', 
-    height: '100%', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    color: '#374151', 
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#374151',
     fontWeight: 600,
     fontSize: 16
   },

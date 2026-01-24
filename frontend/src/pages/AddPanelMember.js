@@ -3,6 +3,7 @@ import { FiBell, FiSearch } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../utils/AuthContext';
+import { API_ENDPOINTS } from '../utils/apiClient';
 
 const AddPanelMember = () => {
   const { user, updateUser } = useAuth();
@@ -41,7 +42,7 @@ const AddPanelMember = () => {
       }
 
       const response = await axios.post(
-        'http://localhost:5001/api/recruiter/panel-members',
+        API_ENDPOINTS.RECRUITER.PANEL_MEMBERS,
         {
           name: form.name.trim(),
           email: form.email.trim(),
@@ -62,9 +63,9 @@ const AddPanelMember = () => {
       });
     } catch (err) {
       console.error('Error adding panel member:', err);
-      const errorMessage = err?.response?.data?.message || 
-                          err?.message || 
-                          'Failed to add panel member. Please try again.';
+      const errorMessage = err?.response?.data?.message ||
+        err?.message ||
+        'Failed to add panel member. Please try again.';
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -173,13 +174,13 @@ const AddPanelMember = () => {
 
           {error && <div style={styles.error}>{error}</div>}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             style={{
               ...styles.submitBtn,
               opacity: submitting ? 0.6 : 1,
               cursor: submitting ? 'not-allowed' : 'pointer'
-            }} 
+            }}
             disabled={submitting}
           >
             {submitting ? 'Adding...' : 'Add'}

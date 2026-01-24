@@ -1,31 +1,93 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
+import axios from 'axios';
+import API_ENDPOINTS from '../config/api';
 
 const JobPosting = () => {
   const [formData, setFormData] = useState({
-    jobTitle: '',
+    title: '',
+    description: '',
     workplaceType: '',
-    jobLocation: ''
+    location: '',
+    requirements: {
+      skills: [],
+      experienceYears: { min: '', max: '' },
+      education: []
+    },
+    salaryRange: { min: '', max: '', currency: 'INR' }
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
-    // Simulate job posting creation
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Prepare job data
+      const jobData = {
+        title: formData.title,
+        description: formData.description || `${formData.title} position`,
+        location: formData.location,
+        workplaceType: formData.workplaceType,
+        requirements: {
+          skills: formData.requirements.skills.length > 0 
+            ? formData.requirements.skills 
+            : formData.title.toLowerCase().includes('engineer') 
+              ? ['JavaScript', 'React', 'Node.js'] 
+              : [],
+          experienceYears: {
+            min: formData.requirements.experienceYears.min ? parseInt(formData.requirements.experienceYears.min) : undefined,
+            max: formData.requirements.experienceYears.max ? parseInt(formData.requirements.experienceYears.max) : undefined
+          }
+        },
+        salaryRange: {
+          min: formData.salaryRange.min ? parseInt(formData.salaryRange.min) : undefined,
+          max: formData.salaryRange.max ? parseInt(formData.salaryRange.max) : undefined,
+          currency: 'INR'
+        },
+        status: 'active'
+      };
+
+      const response = await axios.post(API_ENDPOINTS.JOBS.CREATE, jobData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        alert('Job posted successfully! We will start matching candidates.');
+        navigate('/recruiter');
+      }
+    } catch (err) {
+      console.error('Job posting error:', err);
+      setError(err.response?.data?.message || 'Failed to post job. Please try again.');
+    } finally {
       setLoading(false);
-      alert('Job posted successfully! We will start matching candidates.');
-      navigate('/recruiter');
-    }, 1000);
+    }
   };
 
   return (
@@ -33,11 +95,11 @@ const JobPosting = () => {
       <header style={styles.header}>
         <div style={styles.logo}>PreHire</div>
         <nav style={styles.nav}>
-          <a href="#" style={styles.navLink}>About Us</a>
-          <a href="#" style={styles.navLink}>Clients</a>
-          <a href="#" style={styles.navLink}>Pricing</a>
-          <a href="#" style={styles.navLink}>FAQ</a>
-          <a href="#" style={styles.navLink}>Contact Us</a>
+          <button type="button" style={styles.navLink}>About Us</button>
+          <button type="button" style={styles.navLink}>Clients</button>
+          <button type="button" style={styles.navLink}>Pricing</button>
+          <button type="button" style={styles.navLink}>FAQ</button>
+          <button type="button" style={styles.navLink}>Contact Us</button>
           <Link to="/login" style={styles.loginButton}>
             Login <span style={styles.arrow}>→</span>
           </Link>
@@ -53,15 +115,33 @@ const JobPosting = () => {
           </p>
 
           <form style={styles.form} onSubmit={handleSubmit}>
+            {error && (
+              <div style={styles.error}>
+                {error}
+              </div>
+            )}
+            
             <div style={styles.field}>
               <label style={styles.label}>Job Title*</label>
               <input
                 type="text"
-                name="jobTitle"
-                value={formData.jobTitle}
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
                 style={styles.input}
                 placeholder="e.g. Senior Software Engineer"
+                required
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Job Description*</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                style={{...styles.input, minHeight: '100px', resize: 'vertical'}}
+                placeholder="Describe the role, responsibilities, and requirements..."
                 required
               />
             </div>
@@ -85,8 +165,8 @@ const JobPosting = () => {
             <div style={styles.field}>
               <label style={styles.label}>Job Location*</label>
               <select
-                name="jobLocation"
-                value={formData.jobLocation}
+                name="location"
+                value={formData.location}
                 onChange={handleChange}
                 style={styles.select}
                 required
@@ -102,7 +182,15 @@ const JobPosting = () => {
               </select>
             </div>
 
-            <button type="submit" style={styles.submitButton} disabled={loading}>
+            <button 
+              type="submit" 
+              style={{
+                ...styles.submitButton,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }} 
+              disabled={loading}
+            >
               {loading ? 'Posting Job...' : 'Submit'}
             </button>
           </form>
@@ -143,10 +231,14 @@ const styles = {
     gap: '2rem'
   },
   navLink: {
+    background: 'none',
+    border: 'none',
     textDecoration: 'none',
     color: '#6B7280',
     fontSize: '0.95rem',
-    fontWeight: '500'
+    fontWeight: '500',
+    cursor: 'pointer',
+    padding: 0
   },
   loginButton: {
     textDecoration: 'none',
@@ -236,8 +328,15 @@ const styles = {
     borderRadius: '8px',
     fontSize: '1rem',
     fontWeight: '600',
-    cursor: 'pointer',
     marginTop: '1rem'
+  },
+  error: {
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
+    padding: '0.75rem',
+    borderRadius: '6px',
+    marginBottom: '1rem',
+    fontSize: '0.9rem'
   },
   footer: {
     textAlign: 'center'

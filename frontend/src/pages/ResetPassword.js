@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import API_ENDPOINTS from '../config/api';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 const ResetPassword = () => {
@@ -30,17 +31,17 @@ const ResetPassword = () => {
 
     try {
       // Call backend API to reset password
-      const response = await fetch('http://localhost:5001/api/auth/reset-password', {
+      const response = await fetch(API_ENDPOINTS.AUTH.RESET_PASSWORD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          token, 
-          password: formData.password 
+        body: JSON.stringify({
+          token,
+          password: formData.password
         }),
       });
-      
+
       if (response.ok) {
         setMessage('Password reset successfully! Redirecting to login...');
         setTimeout(() => {
@@ -53,7 +54,7 @@ const ResetPassword = () => {
     } catch (error) {
       setError('Failed to reset password. Please try again.');
     }
-    
+
     setLoading(false);
   };
 
@@ -83,10 +84,10 @@ const ResetPassword = () => {
         <div style={styles.content}>
           <h1 style={styles.title}>Reset Password</h1>
           <p style={styles.subtitle}>Enter your new password below.</p>
-          
+
           {message && <div style={styles.success}>{message}</div>}
           {error && <div style={styles.error}>{error}</div>}
-          
+
           <form onSubmit={handleSubmit} style={styles.form}>
             <input
               type="password"
@@ -97,7 +98,7 @@ const ResetPassword = () => {
               required
               style={styles.input}
             />
-            
+
             <input
               type="password"
               name="confirmPassword"
@@ -107,16 +108,16 @@ const ResetPassword = () => {
               required
               style={styles.input}
             />
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               disabled={loading}
               style={styles.button}
             >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
-          
+
           <div style={styles.links}>
             <Link to="/candidate/login" style={styles.link}>Back to Login</Link>
           </div>

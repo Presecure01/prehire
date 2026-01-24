@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiBell, FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '../utils/AuthContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../utils/apiClient';
+import NotificationBell from '../components/NotificationBell';
 
 const RecruiterDashboardNewUI = () => {
   const { user, updateUser, logout } = useAuth();
@@ -34,7 +36,7 @@ const RecruiterDashboardNewUI = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5001/api/recruiter/profile', {
+        const response = await axios.get(API_ENDPOINTS.RECRUITER.PROFILE, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -92,7 +94,7 @@ const RecruiterDashboardNewUI = () => {
       try {
         setShortlistLoading(true);
         const token = localStorage.getItem('token');
-        const { data } = await axios.get('http://localhost:5001/api/recruiter/shortlisted-profiles', {
+        const { data } = await axios.get(API_ENDPOINTS.RECRUITER.SHORTLISTED_PROFILES, {
           params: { onlyShortlisted: true },
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -168,9 +170,9 @@ const RecruiterDashboardNewUI = () => {
         >
           PreHire
         </div>
-        
+
         {/* Desktop Navigation */}
-        <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}> 
+        <nav style={{ ...styles.nav, display: isMobile ? 'none' : 'flex' }}>
           <a style={styles.navLink} href="#">About Us</a>
           <a style={styles.navLink} href="#">Clients</a>
           <a style={styles.navLink} href="#">Pricing</a>
@@ -179,8 +181,8 @@ const RecruiterDashboardNewUI = () => {
         </nav>
 
         {/* Mobile Menu Button */}
-        <button 
-          style={{...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none'}}
+        <button
+          style={{ ...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none' }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -198,10 +200,12 @@ const RecruiterDashboardNewUI = () => {
         )}
 
         <div style={styles.rightHeader}>
-          <FiBell style={styles.icon} size={20} color="#374151" />
+          <div style={{ marginRight: '12px' }}>
+            <NotificationBell />
+          </div>
           <FiSearch style={styles.icon} size={20} color="#374151" />
           <div style={{ position: 'relative' }} ref={profileMenuRef}>
-            <div 
+            <div
               style={styles.avatar}
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
               role="button"
@@ -226,7 +230,7 @@ const RecruiterDashboardNewUI = () => {
                   <div style={styles.profileDropdownEmail}>{user?.email || ''}</div>
                 </div>
                 <div style={styles.profileDropdownDivider}></div>
-                <button 
+                <button
                   style={styles.profileDropdownItem}
                   onClick={handleLogout}
                   onMouseEnter={(e) => e.target.style.background = '#F9FAFB'}
@@ -245,13 +249,13 @@ const RecruiterDashboardNewUI = () => {
         ...styles.main,
         padding: isMobile ? 10 : 16,
         marginTop: isMobile ? 60 : 70
-      }}> 
+      }}>
         <div style={{
           ...styles.gridTop,
-          gridTemplateColumns: isMobile 
-            ? '1fr' 
-            : window.innerWidth <= 1024 
-              ? '1fr 1fr' 
+          gridTemplateColumns: isMobile
+            ? '1fr'
+            : window.innerWidth <= 1024
+              ? '1fr 1fr'
               : '1.2fr 1fr 0.7fr',
           gridTemplateRows: !isMobile && window.innerWidth <= 1024 ? 'auto auto' : 'auto',
           gap: isMobile ? 12 : 16
@@ -278,8 +282,8 @@ const RecruiterDashboardNewUI = () => {
             <div style={styles.calendarHeader}>Aug 2025</div>
             <div style={styles.calendarDaysRow}>S M T W T F S</div>
             <div style={styles.calendarGrid}>
-              {[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map((d) => (
-                <CalendarCell key={d} day={d} active={[6,13,20,24,27].includes(d)} />
+              {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map((d) => (
+                <CalendarCell key={d} day={d} active={[6, 13, 20, 24, 27].includes(d)} />
               ))}
             </div>
           </div>
@@ -419,15 +423,15 @@ const styles = {
     zIndex: 1000,
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   },
-  brand: { 
-    fontSize: 19, 
-    fontWeight: 700, 
+  brand: {
+    fontSize: 19,
+    fontWeight: 700,
     color: '#7C3AED',
     cursor: 'pointer',
     userSelect: 'none'
   },
-  nav: { 
-    gap: 24, 
+  nav: {
+    gap: 24,
     alignItems: 'center'
   },
   mobileMenuBtn: {
@@ -463,43 +467,43 @@ const styles = {
       borderBottom: 'none'
     }
   },
-  navLink: { 
-    color: '#6B7280', 
-    textDecoration: 'none', 
+  navLink: {
+    color: '#6B7280',
+    textDecoration: 'none',
     fontWeight: 500,
     fontSize: 14
   },
-  rightHeader: { 
-    display: 'flex', 
-    gap: 12, 
-    alignItems: 'center' 
+  rightHeader: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center'
   },
-  icon: { 
-    fontSize: 18, 
+  icon: {
+    fontSize: 18,
     cursor: 'pointer'
   },
-  avatar: { 
-    width: 36, 
-    height: 36, 
-    borderRadius: '50%', 
-    overflow: 'hidden', 
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    overflow: 'hidden',
     background: '#E5E7EB',
     cursor: 'pointer',
     transition: 'opacity 0.2s',
     border: '2px solid transparent'
   },
-  avatarImg: { 
-    width: '100%', 
-    height: '100%', 
-    objectFit: 'cover' 
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
   },
-  avatarFallback: { 
-    width: '100%', 
-    height: '100%', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    color: '#374151', 
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#374151',
     fontWeight: 600,
     fontSize: 16
   },
@@ -546,7 +550,7 @@ const styles = {
     fontSize: 14,
     transition: 'background 0.2s'
   },
-  main: { 
+  main: {
     padding: 16,
     marginTop: 70, // Account for fixed header
     maxWidth: 1400,
@@ -555,131 +559,131 @@ const styles = {
     marginRight: 'auto',
     boxSizing: 'border-box'
   },
-  gridTop: { 
-    display: 'grid', 
-    gap: 16, 
+  gridTop: {
+    display: 'grid',
+    gap: 16,
     alignItems: 'stretch'
   },
-  gridBottom: { 
-    display: 'grid', 
-    gap: 16, 
+  gridBottom: {
+    display: 'grid',
+    gap: 16,
     marginTop: 16
   },
-  welcomeCard: { 
-    borderRadius: 12, 
-    padding: 20, 
-    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
-    display: 'flex', 
-    flexDirection: 'column', 
+  welcomeCard: {
+    borderRadius: 12,
+    padding: 20,
+    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)',
+    display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'space-between'
   },
-  welcomeTitle: { 
-    fontSize: 24, 
-    fontWeight: 700, 
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: 700,
     color: '#111827'
   },
-  welcomeSub: { 
-    marginTop: 6, 
-    color: '#6B7280', 
-    fontWeight: 500 
+  welcomeSub: {
+    marginTop: 6,
+    color: '#6B7280',
+    fontWeight: 500
   },
-  chip: { 
-    marginTop: 20, 
-    alignSelf: 'flex-start', 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: 10, 
-    background: '#FFFFFF', 
-    border: '1px solid #E5E7EB', 
-    color: '#374151', 
-    padding: '10px 14px', 
-    borderRadius: 22, 
+  chip: {
+    marginTop: 20,
+    alignSelf: 'flex-start',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    background: '#FFFFFF',
+    border: '1px solid #E5E7EB',
+    color: '#374151',
+    padding: '10px 14px',
+    borderRadius: 22,
     boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
   },
-  chipNum: { 
-    width: 28, 
-    height: 28, 
-    borderRadius: 14, 
-    background: '#2563EB', 
-    color: '#fff', 
-    display: 'inline-flex', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
+  chipNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    background: '#2563EB',
+    color: '#fff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     fontWeight: 700
   },
-  calendarCard: { 
-    background: '#fff', 
-    border: '1px solid #E5E7EB', 
-    borderRadius: 12, 
+  calendarCard: {
+    background: '#fff',
+    border: '1px solid #E5E7EB',
+    borderRadius: 12,
     padding: 16
   },
-  cardHeaderRow: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    marginBottom: 8 
+  cardHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8
   },
-  cardTitle: { 
-    fontWeight: 700, 
-    color: '#111827' 
+  cardTitle: {
+    fontWeight: 700,
+    color: '#111827'
   },
-  linkSm: { 
-    color: '#2563EB', 
-    textDecoration: 'none', 
-    fontSize: 14 
+  linkSm: {
+    color: '#2563EB',
+    textDecoration: 'none',
+    fontSize: 14
   },
-  calendarHeader: { 
-    color: '#374151', 
-    marginTop: 6, 
-    marginBottom: 10 
+  calendarHeader: {
+    color: '#374151',
+    marginTop: 6,
+    marginBottom: 10
   },
-  calendarDaysRow: { 
-    color: '#9CA3AF', 
-    fontSize: 12, 
-    letterSpacing: 1 
+  calendarDaysRow: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    letterSpacing: 1
   },
-  calendarGrid: { 
-    marginTop: 8, 
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(7, 36px)', 
+  calendarGrid: {
+    marginTop: 8,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 36px)',
     gap: 8
   },
-  interviewsCard: { 
-    background: '#fff', 
-    border: '1px solid #E5E7EB', 
-    borderRadius: 12, 
-    padding: 16, 
-    display: 'flex', 
-    flexDirection: 'column', 
+  interviewsCard: {
+    background: '#fff',
+    border: '1px solid #E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    display: 'flex',
+    flexDirection: 'column',
     gap: 16
   },
-  summaryItem: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: 12 
+  summaryItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12
   },
-  summaryIcon: { 
+  summaryIcon: {
     fontSize: 18
   },
-  summaryNum: { 
-    fontWeight: 700, 
-    color: '#2563EB' 
+  summaryNum: {
+    fontWeight: 700,
+    color: '#2563EB'
   },
-  summaryLabel: { 
-    color: '#6B7280', 
-    fontSize: 14 
+  summaryLabel: {
+    color: '#6B7280',
+    fontSize: 14
   },
-  shortlistedCard: { 
-    background: '#fff', 
-    border: '1px solid #E5E7EB', 
-    borderRadius: 12, 
+  shortlistedCard: {
+    background: '#fff',
+    border: '1px solid #E5E7EB',
+    borderRadius: 12,
     padding: 16
   },
-  shortRow: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    padding: '10px 0', 
+  shortRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px 0',
     borderBottom: '1px solid #F3F4F6'
   },
   emptyState: {
@@ -692,53 +696,53 @@ const styles = {
     fontSize: 14,
     padding: '8px 0'
   },
-  linkXS: { 
-    color: '#2563EB', 
-    textDecoration: 'none', 
-    fontSize: 14 
+  linkXS: {
+    color: '#2563EB',
+    textDecoration: 'none',
+    fontSize: 14
   },
-  panelCard: { 
-    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
-    border: '1px solid #E5E7EB', 
-    borderRadius: 12, 
+  panelCard: {
+    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)',
+    border: '1px solid #E5E7EB',
+    borderRadius: 12,
     padding: 16
   },
-  panelRow: { 
-    display: 'grid', 
-    gridTemplateColumns: '1fr 1fr auto', 
-    alignItems: 'center', 
-    padding: '10px 0', 
+  panelRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr auto',
+    alignItems: 'center',
+    padding: '10px 0',
     borderBottom: '1px solid #EEF2FF'
   },
-  addMoreBtn: { 
-    background: '#6366F1', 
-    color: '#fff', 
-    border: 'none', 
-    borderRadius: 8, 
-    padding: '8px 12px', 
-    cursor: 'pointer', 
+  addMoreBtn: {
+    background: '#6366F1',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    padding: '8px 12px',
+    cursor: 'pointer',
     fontWeight: 600
   },
-  accountCard: { 
-    gridColumn: '1 / -1', 
-    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)', 
-    border: '1px solid #E5E7EB', 
-    borderRadius: 12, 
+  accountCard: {
+    gridColumn: '1 / -1',
+    background: 'linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)',
+    border: '1px solid #E5E7EB',
+    borderRadius: 12,
     padding: 16
   },
-  accountRow: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
+  accountRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 12
   },
-  addBalanceBtn: { 
-    background: '#6366F1', 
-    color: '#fff', 
-    border: 'none', 
-    borderRadius: 8, 
-    padding: '8px 12px', 
-    cursor: 'pointer', 
+  addBalanceBtn: {
+    background: '#6366F1',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    padding: '8px 12px',
+    cursor: 'pointer',
     fontWeight: 600
   }
 };

@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ProfileUnlock from './ProfileUnlock';
 import './SearchCandidates.css';
+import { API_ENDPOINTS } from '../utils/apiClient';
 
 const SearchCandidates = () => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({});
   const [facets, setFacets] = useState({});
-  
+
   const [filters, setFilters] = useState({
     search: '',
     experience: 'all',
@@ -19,7 +20,7 @@ const SearchCandidates = () => {
     skills: '',
     sortBy: 'relevance'
   });
-  
+
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [savedCandidates, setSavedCandidates] = useState(new Set());
@@ -65,7 +66,7 @@ const SearchCandidates = () => {
   const fetchFacets = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5001/api/recruiter/facets', {
+      const response = await axios.get(API_ENDPOINTS.RECRUITER.FACETS, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFacets(response.data);
@@ -77,7 +78,7 @@ const SearchCandidates = () => {
   const fetchSuggestions = async (query) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5001/api/recruiter/suggestions?q=${query}`, {
+      const response = await axios.get(`${API_ENDPOINTS.RECRUITER.SUGGESTIONS}?q=${query}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuggestions(response.data);
@@ -92,20 +93,20 @@ const SearchCandidates = () => {
     try {
       const token = localStorage.getItem('token');
       const queryParams = new URLSearchParams();
-      
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value !== 'all') {
           queryParams.append(key, value);
         }
       });
-      
+
       queryParams.append('page', page);
       queryParams.append('limit', 20);
 
-      const response = await axios.get(`http://localhost:5001/api/recruiter/search?${queryParams}`, {
+      const response = await axios.get(`${API_ENDPOINTS.RECRUITER.SEARCH}?${queryParams}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setCandidates(response.data.candidates || []);
       setPagination(response.data.pagination || {});
     } catch (error) {
@@ -161,7 +162,7 @@ const SearchCandidates = () => {
 
   const handleUnlockSuccess = (unlockedProfile) => {
     // Update the candidate in the list with unlocked data
-    setCandidates(prev => prev.map(c => 
+    setCandidates(prev => prev.map(c =>
       c._id === unlockedProfile._id ? { ...c, ...unlockedProfile, unlocked: true } : c
     ));
   };
@@ -183,7 +184,7 @@ const SearchCandidates = () => {
           <button onClick={() => handleSearch(1)} style={styles.searchButton}>
             🔍 Search
           </button>
-          
+
           {showSuggestions && suggestions.length > 0 && (
             <div style={styles.suggestions}>
               {suggestions.map((suggestion, index) => (
@@ -315,7 +316,7 @@ const SearchCandidates = () => {
                 </p>
               )}
             </div>
-            
+
             <div style={styles.sortContainer}>
               <label style={styles.sortLabel}>Sort by:</label>
               <select
@@ -371,11 +372,11 @@ const SearchCandidates = () => {
               >
                 Previous
               </button>
-              
+
               <span style={styles.pageInfo}>
                 Page {pagination.currentPage} of {pagination.totalPages}
               </span>
-              
+
               <button
                 onClick={() => handleSearch(pagination.currentPage + 1)}
                 disabled={!pagination.hasNext}
@@ -390,7 +391,7 @@ const SearchCandidates = () => {
           )}
         </div>
       </div>
-      
+
       {/* Profile Unlock Modal */}
       {showUnlockModal && selectedCandidate && (
         <ProfileUnlock
@@ -420,11 +421,11 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
             </div>
           )}
         </div>
-        
+
         <div style={styles.candidateInfo}>
           <div style={styles.candidateName}>{candidate.name}</div>
           <div style={styles.candidateRole}>{candidate.currentRole || 'Candidate'}</div>
-          
+
           <div style={styles.candidateDetails}>
             {candidate.location && (
               <span style={styles.detailItem}>
@@ -442,7 +443,7 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
               </span>
             )}
           </div>
-          
+
           {candidate.skills && candidate.skills.length > 0 && (
             <div style={styles.skillsContainer}>
               {candidate.skills.slice(0, 4).map((skill, index) => (
@@ -458,7 +459,7 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
             </div>
           )}
         </div>
-        
+
         <div style={styles.cardActions}>
           <button
             onClick={onToggleSave}
@@ -470,7 +471,7 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
           >
             {isSaved ? '❤️' : '🤍'}
           </button>
-          
+
           {candidate.resumeScore && (
             <div style={styles.scoreContainer}>
               <div style={styles.scoreCircle}>
@@ -479,7 +480,7 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
               <span style={styles.scoreLabel}>Score</span>
             </div>
           )}
-          
+
           {candidate.matchPercentage && (
             <div style={styles.matchContainer}>
               <span style={styles.matchText}>{candidate.matchPercentage}% match</span>
@@ -487,7 +488,7 @@ const CandidateCard = ({ candidate, isSaved, onToggleSave, onUnlock }) => {
           )}
         </div>
       </div>
-      
+
       <button onClick={onUnlock} style={styles.unlockButton}>
         {candidate.unlocked ? '✅ Profile Unlocked' : '🔓 Unlock Full Profile & Resume'}
       </button>

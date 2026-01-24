@@ -11,13 +11,20 @@ const recruiterRoutes = require('./routes/recruiter');
 const uploadRoutes = require('./routes/upload');
 const linkedinRoutes = require('./routes/linkedin');
 const socialAuthRoutes = require('./routes/social-auth');
+const jobRoutes = require('./routes/jobs');
+const notificationRoutes = require('./routes/notifications');
+const errorHandler = require('./middleware/errorHandler');
+const rateLimiter = require('./middleware/rateLimiter');
 
 const app = express();
 
+// Rate limiting
+app.use('/api/', rateLimiter(15 * 60 * 1000, 100)); // 100 requests per 15 minutes
+
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration for OAuth
 app.use(session({
@@ -40,6 +47,11 @@ app.use('/api/auth', socialAuthRoutes);
 app.use('/api/candidate', candidateRoutes);
 app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
 // MongoDB connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/prehire';

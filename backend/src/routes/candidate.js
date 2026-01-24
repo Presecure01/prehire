@@ -33,9 +33,12 @@ router.put('/profile', auth, async (req, res) => {
       education,
       location,
       experienceYears,
-      email
+      email,
+      github,
+      languages,
+      summary
     } = req.body;
-    
+
     // Filter out undefined values
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -48,15 +51,18 @@ router.put('/profile', auth, async (req, res) => {
     if (currentRole !== undefined) updateData.currentRole = currentRole;
     if (education !== undefined) updateData.education = education;
     if (location !== undefined) updateData.location = location;
+    if (github !== undefined) updateData.github = github;
+    if (languages !== undefined) updateData.languages = languages;
+    if (summary !== undefined) updateData.summary = summary;
     if (experienceYears !== undefined) {
       const parsedYears = Number(experienceYears);
       if (!Number.isNaN(parsedYears)) {
         updateData.experienceYears = parsedYears;
       }
     }
-    
+
     console.log('Updating profile with:', updateData);
-    
+
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       updateData,
@@ -78,11 +84,31 @@ router.put('/profile', auth, async (req, res) => {
 // Update parsed resume data
 router.put('/resume-data', auth, async (req, res) => {
   try {
-    const { skills, experience, education, resumeScore, scoreBreakdown, experienceYears } = req.body;
-    
+    const {
+      name, email, phone, skills, experience, education, resumeScore, scoreBreakdown,
+      experienceYears, linkedin, github, languages, summary, rawResumeText
+    } = req.body;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    // Don't update email from resume parse as it's a unique identifier/login credential
+    // if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (skills !== undefined) updateData.skills = skills;
+    if (experience !== undefined) updateData.experience = experience;
+    if (education !== undefined) updateData.education = education;
+    if (resumeScore !== undefined) updateData.resumeScore = resumeScore;
+    if (scoreBreakdown !== undefined) updateData.scoreBreakdown = scoreBreakdown;
+    if (experienceYears !== undefined) updateData.experienceYears = experienceYears;
+    if (linkedin !== undefined) updateData.linkedIn = linkedin;
+    if (github !== undefined) updateData.github = github;
+    if (languages !== undefined) updateData.languages = languages;
+    if (summary !== undefined) updateData.summary = summary;
+    if (rawResumeText !== undefined) updateData.rawResumeText = rawResumeText;
+
     const user = await User.findByIdAndUpdate(
       req.user.userId,
-      { skills, experience, education, resumeScore, scoreBreakdown, experienceYears },
+      updateData,
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -92,11 +118,49 @@ router.put('/resume-data', auth, async (req, res) => {
   }
 });
 
+// Calculate ATS score
+router.post('/ats-score', auth, async (req, res) => {
+  try {
+    const { jobDescription } = req.body;
+
+    if (!jobDescription) {
+      return res.status(400).json({ message: 'Job description is required' });
+    }
+
+    const atsScoringService = require('../services/atsScoringService');
+    const user = await User.findById(req.user.userId).select('-password');
+
+    if (!user || user.role !== 'candidate') {
+      return res.status(404).json({ message: 'Candidate not found' });
+    }
+
+    const profile = {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      skills: user.skills || [],
+      experience: user.experience || '',
+      education: user.education || '',
+      experienceYears: user.experienceYears || 0,
+      currentRole: user.currentRole || '',
+      summary: user.summary || '',
+      rawResumeText: user.rawResumeText || ''
+    };
+
+    const atsScore = atsScoringService.calculateDetailedATSScore(profile, jobDescription);
+
+    res.json(atsScore);
+  } catch (error) {
+    console.error('ATS score calculation error:', error);
+    res.status(500).json({ message: 'ATS score calculation failed', error: error.message });
+  }
+});
+
 // Update wallet balance
 router.put('/wallet-balance', auth, async (req, res) => {
   try {
     const { amount, operation = 'add' } = req.body; // operation: 'add' or 'set'
-    
+
     if (amount === undefined || amount < 0) {
       return res.status(400).json({ message: 'Invalid amount' });
     }
@@ -107,8 +171,8 @@ router.put('/wallet-balance', auth, async (req, res) => {
     }
 
     const currentBalance = user.walletBalance || 0;
-    const newBalance = operation === 'add' 
-      ? currentBalance + amount 
+    const newBalance = operation === 'add'
+      ? currentBalance + amount
       : amount;
 
     const updatedUser = await User.findByIdAndUpdate(

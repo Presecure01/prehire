@@ -3,6 +3,7 @@ import { FiBell, FiSearch, FiMenu, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../utils/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../utils/apiClient';
 
 const AMOUNTS = [2000, 5000, 10000, 30000];
 
@@ -48,18 +49,18 @@ const CandidateAddBalance = () => {
       alert('Please enter a valid amount');
       return;
     }
-    
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        'http://localhost:5001/api/candidate/wallet-balance',
+        API_ENDPOINTS.CANDIDATE.WALLET_BALANCE,
         { amount: finalAmount, operation: 'add' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // Update local user context with new balance
       updateUser({ walletBalance: response.data.walletBalance });
-      
+
       alert(`Added ₹${finalAmount.toLocaleString('en-IN')} to your wallet.`);
       navigate('/candidate/payment-success', { state: { amountAdded: finalAmount } });
     } catch (error) {
@@ -79,9 +80,9 @@ const CandidateAddBalance = () => {
         padding: isMobile ? '12px 16px' : '16px 32px'
       }}>
         <div style={styles.brand}>PreHire</div>
-        
+
         {/* Desktop Navigation */}
-        <nav style={{...styles.nav, display: isMobile ? 'none' : 'flex'}}>
+        <nav style={{ ...styles.nav, display: isMobile ? 'none' : 'flex' }}>
           <a style={styles.navLink} href="#">About Us</a>
           <a style={styles.navLink} href="#">Clients</a>
           <a style={styles.navLink} href="#">Pricing</a>
@@ -90,8 +91,8 @@ const CandidateAddBalance = () => {
         </nav>
 
         {/* Mobile Menu Button */}
-        <button 
-          style={{...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none'}}
+        <button
+          style={{ ...styles.mobileMenuBtn, display: isMobile ? 'block' : 'none' }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -175,10 +176,10 @@ const CandidateAddBalance = () => {
           <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Payment Method</div>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
             <label style={styles.radioLabel}>
-              <input type="radio" name="method" checked={method==='credit'} onChange={() => setMethod('credit')} /> Credit Card
+              <input type="radio" name="method" checked={method === 'credit'} onChange={() => setMethod('credit')} /> Credit Card
             </label>
             <label style={styles.radioLabel}>
-              <input type="radio" name="method" checked={method==='debit'} onChange={() => setMethod('debit')} /> Debit Card
+              <input type="radio" name="method" checked={method === 'debit'} onChange={() => setMethod('debit')} /> Debit Card
             </label>
           </div>
 
@@ -215,20 +216,20 @@ const CandidateAddBalance = () => {
                 <div style={styles.formGrid}>
                   <div style={styles.fieldCol}>
                     <label style={styles.label}>Card Holder Name</label>
-                    <input style={styles.input} value={card.holder} onChange={(e)=>setCard({...card, holder:e.target.value})} required />
+                    <input style={styles.input} value={card.holder} onChange={(e) => setCard({ ...card, holder: e.target.value })} required />
                   </div>
                   <div style={styles.fieldCol}>
                     <label style={styles.label}>Card Number</label>
-                    <input style={styles.input} value={card.number} onChange={(e)=>setCard({...card, number:e.target.value})} required inputMode="numeric" maxLength={19} placeholder="1234 5678 9012 3456" />
+                    <input style={styles.input} value={card.number} onChange={(e) => setCard({ ...card, number: e.target.value })} required inputMode="numeric" maxLength={19} placeholder="1234 5678 9012 3456" />
                   </div>
                   <div style={styles.fieldRow}>
                     <div style={{ flex: 1 }}>
                       <label style={styles.label}>Expiry (MM/YY)</label>
-                      <input style={styles.input} value={card.expiry} onChange={(e)=>setCard({...card, expiry:e.target.value})} required placeholder="09/29" />
+                      <input style={styles.input} value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value })} required placeholder="09/29" />
                     </div>
                     <div style={{ width: 140 }}>
                       <label style={styles.label}>CVV</label>
-                      <input style={styles.input} value={card.cvv} onChange={(e)=>setCard({...card, cvv:e.target.value})} required inputMode="numeric" maxLength={4} />
+                      <input style={styles.input} value={card.cvv} onChange={(e) => setCard({ ...card, cvv: e.target.value })} required inputMode="numeric" maxLength={4} />
                     </div>
                   </div>
                 </div>

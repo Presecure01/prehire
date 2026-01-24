@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
   currentRole: String,
   location: String,
   education: String, // Can be string or array
+  github: String,
+  languages: [String],
+  summary: String,
+  rawResumeText: String,
   resumeScore: Number,
   scoreBreakdown: {
     skillsScore: Number,
@@ -54,6 +58,15 @@ const userSchema = new mongoose.Schema({
   primaryCardId: String
 }, { timestamps: true });
 
+// Indexes for performance
+userSchema.index({ email: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ 'skills': 1 });
+userSchema.index({ location: 1 });
+userSchema.index({ experienceYears: 1 });
+userSchema.index({ resumeScore: -1 });
+userSchema.index({ createdAt: -1 });
+
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -61,6 +74,12 @@ userSchema.pre('save', async function(next) {
 });
 
 userSchema.methods.comparePassword = async function(password) {
+  if (!this.password) {
+    return false;
+  }
+  if (!password) {
+    return false;
+  }
   return bcrypt.compare(password, this.password);
 };
 

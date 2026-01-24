@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_ENDPOINTS, getApiUrl } from '../utils/apiClient';
 
 const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
   const [loading, setLoading] = useState(false);
@@ -10,11 +11,11 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:5001/api/recruiter/unlock-profile/${candidateId}`,
+        `${API_ENDPOINTS.RECRUITER.UNLOCK_PROFILE}/${candidateId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setUnlockedProfile(response.data.candidate);
       if (onUnlock) onUnlock(response.data.candidate);
     } catch (error) {
@@ -33,7 +34,7 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
             <h2 style={styles.title}>🔓 Profile Unlocked!</h2>
             <button onClick={onClose} style={styles.closeButton}>×</button>
           </div>
-          
+
           <div style={styles.content}>
             <div style={styles.profileSection}>
               <div style={styles.avatar}>
@@ -45,11 +46,11 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
                   </div>
                 )}
               </div>
-              
+
               <div style={styles.profileInfo}>
                 <h3 style={styles.name}>{unlockedProfile.name}</h3>
                 <p style={styles.role}>{unlockedProfile.currentRole}</p>
-                
+
                 <div style={styles.contactInfo}>
                   <div style={styles.contactItem}>
                     <span style={styles.contactLabel}>📧 Email:</span>
@@ -68,7 +69,7 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
                     </div>
                   )}
                 </div>
-                
+
                 {unlockedProfile.skills && unlockedProfile.skills.length > 0 && (
                   <div style={styles.skillsSection}>
                     <h4 style={styles.sectionTitle}>Skills</h4>
@@ -81,26 +82,26 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
                     </div>
                   </div>
                 )}
-                
+
                 {unlockedProfile.experience && (
                   <div style={styles.section}>
                     <h4 style={styles.sectionTitle}>Experience</h4>
                     <p style={styles.sectionContent}>{unlockedProfile.experience}</p>
                   </div>
                 )}
-                
+
                 {unlockedProfile.education && (
                   <div style={styles.section}>
                     <h4 style={styles.sectionTitle}>Education</h4>
                     <p style={styles.sectionContent}>{unlockedProfile.education}</p>
                   </div>
                 )}
-                
+
                 {unlockedProfile.resumeUrl && (
                   <div style={styles.resumeSection}>
-                    <a 
-                      href={`http://localhost:5001${unlockedProfile.resumeUrl}`} 
-                      target="_blank" 
+                    <a
+                      href={getApiUrl(unlockedProfile.resumeUrl)}
+                      target="_blank"
                       rel="noopener noreferrer"
                       style={styles.resumeButton}
                     >
@@ -111,7 +112,7 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
               </div>
             </div>
           </div>
-          
+
           <div style={styles.footer}>
             <button onClick={onClose} style={styles.doneButton}>
               Done
@@ -129,13 +130,13 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
           <h2 style={styles.title}>🔓 Unlock Candidate Profile</h2>
           <button onClick={onClose} style={styles.closeButton}>×</button>
         </div>
-        
+
         <div style={styles.content}>
           <div style={styles.unlockInfo}>
             <div style={styles.unlockIcon}>🔐</div>
             <h3>Premium Feature</h3>
             <p>Unlock this candidate's full profile to access:</p>
-            
+
             <ul style={styles.featureList}>
               <li>✅ Complete contact information</li>
               <li>✅ Full resume download</li>
@@ -144,7 +145,7 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
               <li>✅ Education background</li>
               <li>✅ Skills assessment</li>
             </ul>
-            
+
             <div style={styles.pricing}>
               <div style={styles.priceTag}>
                 <span style={styles.price}>$5</span>
@@ -153,13 +154,13 @@ const ProfileUnlock = ({ candidateId, onClose, onUnlock }) => {
             </div>
           </div>
         </div>
-        
+
         <div style={styles.footer}>
           <button onClick={onClose} style={styles.cancelButton}>
             Cancel
           </button>
-          <button 
-            onClick={handleUnlock} 
+          <button
+            onClick={handleUnlock}
             disabled={loading}
             style={styles.unlockButton}
           >

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_ENDPOINTS from '../config/api';
 import { Link } from 'react-router-dom';
 
 const ForgotPassword = () => {
@@ -9,17 +10,17 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // Call backend API to send reset email
-      const response = await fetch('http://localhost:5001/api/auth/forgot-password', {
+      const response = await fetch(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
       });
-      
+
       if (response.ok) {
         setMessage('Password reset link sent to your email!');
       } else {
@@ -29,7 +30,7 @@ const ForgotPassword = () => {
     } catch (error) {
       setMessage('Failed to send reset email. Please try again.');
     }
-    
+
     setLoading(false);
   };
 
@@ -50,9 +51,9 @@ const ForgotPassword = () => {
         <div style={styles.content}>
           <h1 style={styles.title}>Forgot Password?</h1>
           <p style={styles.subtitle}>Enter your email to reset your password.</p>
-          
+
           {message && <div style={styles.success}>{message}</div>}
-          
+
           <form onSubmit={handleSubmit} style={styles.form}>
             <input
               type="email"
@@ -62,16 +63,16 @@ const ForgotPassword = () => {
               required
               style={styles.input}
             />
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               disabled={loading}
               style={styles.button}
             >
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
           </form>
-          
+
           <div style={styles.links}>
             <Link to="/login" style={styles.link}>Back to Login</Link>
             <Link to="/employer-login" style={styles.link}>Employer Login</Link>
